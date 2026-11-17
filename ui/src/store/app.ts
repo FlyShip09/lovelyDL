@@ -1,6 +1,7 @@
 // The UI's copy of the engine's state, rebuilt from `get_snapshot` and kept current by the
 // `update` event. Rust owns the truth; this store only mirrors it and holds view state.
 
+import { useEffect } from "react";
 import { create } from "zustand";
 
 import type {
@@ -29,6 +30,7 @@ export type Sheet =
   | { kind: "about" }
   | { kind: "updates" }
   | { kind: "formats"; jobId: string | null }
+  | { kind: "options" }
   | { kind: "onboarding" };
 
 interface State {
@@ -170,9 +172,12 @@ export function apply(changes: Change[]) {
       case "playlistEntries": {
         const preview = patch.preview ?? state.preview;
         if (preview?.id === change.data.previewId && preview.status.status === "playlist") {
+          // Entries already present are skipped, so a repeated batch can never duplicate them.
+          const known = new Set(preview.status.entries.map((e) => e.id));
+          const fresh = change.data.entries.filter((e) => !known.has(e.id));
           patch.preview = {
             ...preview,
-            status: { ...preview.status, entries: [...preview.status.entries, ...change.data.entries] },
+            status: { ...preview.status, entries: [...preview.status.entries, ...fresh] },
           };
         }
         break;
@@ -237,6 +242,26 @@ export async function connect(): Promise<() => void> {
   // Changes that raced the snapshot are re-applied; applying a newer state twice is harmless.
   queued.forEach(apply);
   return unlisten;
+}
+
+/**
+ * Connects while the component is mounted. Unmounting before the connection is up (React's
+ * development double mount does exactly that) still removes the listener once it exists;
+ * otherwise every change would be applied twice.
+ */
+export function useConnection() {
+  useEffect(() => {
+    let stop: (() => void) | undefined;
+    let gone = false;
+    void connect().then((unlisten) => {
+      if (gone) unlisten();
+      else stop = unlisten;
+    });
+    return () => {
+      gone = true;
+      stop?.();
+    };
+  }, []);
 }
 
 // ----- actions ---------------------------------------------------------------------------

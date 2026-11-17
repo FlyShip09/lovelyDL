@@ -14,7 +14,7 @@ import { MenuHost } from "../../components/Menu";
 import type { OnAdd, ReleaseChannel, Settings, SponsorBlock, Tool } from "../../ipc";
 import { commands } from "../../ipc";
 import { snappy } from "../../motion/tokens";
-import { connect, saveSettings, useApp } from "../../store/app";
+import { saveSettings, useApp, useConnection } from "../../store/app";
 import { PresetControls } from "../downloads/PreviewCard";
 import styles from "./settings.module.css";
 
@@ -555,11 +555,7 @@ function Advanced({ st }: { st: Settings }) {
 export function App() {
   const [tab, setTab] = useState<Tab>("general");
   const st = useApp((s) => s.settings);
-  useEffect(() => {
-    let stop: (() => void) | undefined;
-    void connect().then((u) => (stop = u));
-    return () => stop?.();
-  }, []);
+  useConnection();
   return (
     <div className={styles.window}>
       <div className={styles.toolbar} data-tauri-drag-region>

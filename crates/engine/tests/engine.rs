@@ -436,3 +436,24 @@ async fn copy_details_has_versions_and_the_command_but_no_secrets() {
         assert!(!details.contains(secret), "{secret} leaked:\n{details}");
     }
 }
+
+#[tokio::test]
+async fn streamed_playlist_entries_are_never_counted_twice() {
+    // Slow enough that the entries arrive over many batches, as they do from a real site.
+    let mut h =
+        ready(Setup { line_ms: 40, settings: Box::new(|s| s.on_add = OnAdd::Preview), ..Setup::default() }).await;
+    h.engine.add_links(fake_url("playlist"), Source::Paste).await.unwrap();
+    let mut most = 0;
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+    loop {
+        h.settle(50).await;
+        if let Some(Preview { status: PreviewStatus::Playlist { entries, complete, .. }, .. }) = &h.preview {
+            most = most.max(entries.len());
+            if *complete {
+                break;
+            }
+        }
+        assert!(std::time::Instant::now() < deadline, "playlist never completed");
+    }
+    assert_eq!(most, 17, "the mirror held more entries than the playlist has");
+}

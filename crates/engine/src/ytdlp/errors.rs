@@ -104,7 +104,13 @@ fn lines_with<'a>(log: &'a [String], prefix: &str) -> Vec<&'a str> {
 
 /// Classifies a failed run from its log. `exit_code` is `None` when the process was killed.
 pub fn classify(log: &[String], exit_code: Option<i32>) -> JobError {
-    let errors = lines_with(log, "ERROR:");
+    // Option problems come from yt-dlp's argument parser as "yt-dlp: error: …" (or yt-dlp.exe).
+    let usage: Vec<&str> = log
+        .iter()
+        .filter_map(|l| l.trim_start().split_once(": error: ").filter(|(head, _)| head.starts_with("yt-dlp")))
+        .map(|(_, message)| message)
+        .collect();
+    let errors = if usage.is_empty() { lines_with(log, "ERROR:") } else { usage };
     let warnings = lines_with(log, "WARNING:");
     // Errors decide. With none, warnings explain why nothing was produced.
     let decisive = if errors.is_empty() { &warnings } else { &errors };
@@ -177,6 +183,16 @@ mod tests {
         assert_eq!((e.kind, e.fix), (Unknown, Some(Fix::UpdateYtdlp)));
         let e = classify(&["ERROR: something nobody has seen before".into()], Some(1));
         assert_eq!((e.kind, e.fix, e.detail.as_str()), (Unknown, Some(Fix::Retry), "something nobody has seen before"));
+    }
+
+    #[test]
+    fn option_errors_from_the_argument_parser() {
+        let log =
+            [r#"yt-dlp.exe: error: invalid default output template "%(title)s/%(nonsense": incomplete format key"#
+                .to_string()];
+        let e = classify(&log, Some(2));
+        assert_eq!(e.kind, Unknown);
+        assert_eq!(e.detail, r#"invalid default output template "%(title)s/%(nonsense": incomplete format key"#);
     }
 
     #[test]

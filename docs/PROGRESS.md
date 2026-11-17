@@ -121,7 +121,38 @@ Not verified, and why:
   a plain PowerShell test toast also did not appear (Do Not Disturb or notifications off).
 - `LOVELYDL_HOME` keeps these live runs out of the real settings and Downloads folder.
 
+## M4 · Power features — done
+
+Built: per-download Options sheet (destination, subtitles, time range, precise cuts,
+SponsorBlock, live stream handling), the Advanced formats sheet, playlist selection with
+search, select all/none, shift-click ranges, keyboard selection and the download archive.
+Network and account options live in Settings.
+
+Verified with real yt-dlp (`dl` example now takes `--subs`, `--section`, `--sponsorblock`,
+`--rate`) and in the real app:
+
+| What | How |
+|---|---|
+| Time range | 0:05–0:15 of the test video → 10.04 s file (ffprobe) |
+| Subtitles embedded | Sintel 2:00–3:00 with `en` → English mov_text track, chapters and cover art in the file |
+| SponsorBlock mark | Big Buck Bunny section ran clean |
+| Speed limit | 400K against the local server → 399–408 KB/s for the whole run |
+| A site other than YouTube | Internet Archive, 1960 ad (public domain) → 2.9 MB H.264 MP4, converted from the source |
+| Playlist | Real app: Blender playlist, search "Caminandes", 2 picked, M4A → two files in `Official Blender Open Movies/` named `10 - …` and `13 - …`; the archive marked 2 entries as already downloaded |
+| File-name template preview | Real app command with real yt-dlp: `Blender - Caminandes 3： Llamigos.mp4`; a broken template shows yt-dlp's reason |
+| Argument building for every option | Golden tests (M1), now including the MP4 re-encode rule |
+
+Not verified, and why:
+
+- **Cookies from a browser.** Chrome, Edge and Firefox have no cookie database on this PC.
+  Brave is installed, but reading the owner's real browser cookies needs their OK.
+- **Live streams** (from the start, waiting for a scheduled one): no dependable live source
+  to test against. Argument building is covered by tests.
+- **Proxy**: no proxy available. A dead proxy is classified as a connection error (fixture).
+- Sections on the Internet Archive fail inside ffmpeg ("Error opening input: I/O error") with
+  plain yt-dlp too; not a lovelyDL issue.
+
 ## Next
 
-M4: power features (subtitles, ranges, SponsorBlock, cookies, live, network options) checked
-against real output; then M5.
+M5: settings, onboarding and components in the real app, clipboard, deep links, tray,
+updater wiring.

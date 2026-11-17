@@ -133,6 +133,7 @@ function Ready({ preview, info, resolved }: { preview: Preview; info: MediaInfo;
       {!info.drm && (
         <div className={styles.controls}>
           <PresetControls request={preview.request} onChange={updatePreview} />
+          <Button onClick={() => openSheet({ kind: "options" })}>{s.options}…</Button>
           <Button onClick={() => openSheet({ kind: "formats", jobId: null })}>{s.advanced}</Button>
           <span className={styles.spacer} />
           <AnimatePresence mode="wait" initial={false}>

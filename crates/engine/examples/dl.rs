@@ -25,8 +25,14 @@ fn size(bytes: f64) -> String {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = std::env::args().skip(1);
     let (mut url, mut preset, mut format, mut dir, mut install) = (None, None, None::<String>, None, false);
+    let (mut subs, mut section, mut sponsor, mut rate) =
+        (None::<String>, None::<String>, None::<String>, None::<String>);
     while let Some(arg) = args.next() {
         match arg.as_str() {
+            "--subs" => subs = args.next(),
+            "--section" => section = args.next(),
+            "--sponsorblock" => sponsor = args.next(),
+            "--rate" => rate = args.next(),
             "--preset" => preset = args.next(),
             "--format" => format = args.next(),
             "--dir" => dir = args.next(),
@@ -35,7 +41,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     let Some(url) = url else {
-        eprintln!("usage: dl <url> [--preset best|mp4|mp4-720|mp3|…] [--dir <folder>] [--install]");
+        eprintln!(
+            "usage: dl <url> [--preset best|mp4|mp4-720|mp3|…] [--format 137+140] [--subs en,fr] [--section 1:30-2:00] [--sponsorblock mark|remove] [--rate 500K] [--dir <folder>] [--install]"
+        );
         std::process::exit(2);
     };
 
@@ -65,6 +73,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let (video, audio) = format.split_once('+').map_or((format.as_str(), None), |(v, a)| (v, Some(a)));
         settings.default_request.formats =
             Some(FormatPick { video: Some(video.into()), audio: audio.map(String::from) });
+    }
+    let options = &mut settings.default_request.options;
+    if let Some(langs) = subs {
+        options.subtitles = true;
+        options.sub_langs = langs.split(',').map(String::from).collect();
+    }
+    if let Some((start, end)) = section.as_deref().and_then(|s| s.split_once('-')) {
+        options.section = Some(engine::model::Section { start: start.into(), end: end.into() });
+    }
+    match sponsor.as_deref() {
+        Some("mark") => options.sponsorblock = engine::model::SponsorBlock::Mark,
+        Some("remove") => options.sponsorblock = engine::model::SponsorBlock::Remove,
+        _ => {}
+    }
+    if let Some(rate) = rate {
+        settings.rate_limit = rate;
     }
     engine.settings_set(settings).await?;
 

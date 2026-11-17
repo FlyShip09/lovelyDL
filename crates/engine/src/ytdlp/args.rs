@@ -104,6 +104,9 @@ pub fn format_args(req: &DownloadRequest) -> Vec<String> {
         Preset::Mp4 { max_height } if !picked => {
             a.extend([s("-t"), s("mp4")]);
             a.extend(cap(max_height));
+            // The alias only remuxes, which fails when no H.264 exists (an MPEG-2 or VP9 source).
+            // Re-encoding happens only when the result is not already MP4 (verified with 2026.10.26).
+            a.extend([s("--recode-video"), s("mp4")]);
         }
         Preset::Best { .. } | Preset::Mp4 { .. } => {}
         Preset::Audio { format } => {
@@ -311,6 +314,8 @@ mod tests {
             "--no-playlist",
             "-t",
             "mp4",
+            "--recode-video",
+            "mp4",
             "--embed-metadata",
             "--embed-thumbnail",
             "--convert-thumbnails",
@@ -392,6 +397,8 @@ mod tests {
             "mp4",
             "-S",
             "res:720",
+            "--recode-video",
+            "mp4",
             "--embed-metadata",
             "--embed-thumbnail",
             "--convert-thumbnails",
@@ -444,8 +451,8 @@ mod tests {
     fn golden_presets() {
         assert_eq!(formats(Preset::Best { max_height: None }), "");
         assert_eq!(formats(Preset::Best { max_height: Some(1080) }), "-S res:1080");
-        assert_eq!(formats(Preset::Mp4 { max_height: None }), "-t mp4");
-        assert_eq!(formats(Preset::Mp4 { max_height: Some(480) }), "-t mp4 -S res:480");
+        assert_eq!(formats(Preset::Mp4 { max_height: None }), "-t mp4 --recode-video mp4");
+        assert_eq!(formats(Preset::Mp4 { max_height: Some(480) }), "-t mp4 -S res:480 --recode-video mp4");
         let audio = |format| formats(Preset::Audio { format });
         assert_eq!(audio(AudioFormat::M4a), "-x --audio-format m4a -S acodec:aac");
         assert_eq!(audio(AudioFormat::Mp3), "-t mp3 --audio-quality 0");
@@ -466,7 +473,7 @@ mod tests {
         let mp4 = Preset::Mp4 { max_height: Some(720) };
         assert_eq!(pick(Some("137"), Some("140"), mp4.clone()), "-f 137+140");
         assert_eq!(pick(Some("18"), None, mp4.clone()), "-f 18");
-        assert_eq!(pick(None, None, mp4), "-t mp4 -S res:720");
+        assert_eq!(pick(None, None, mp4), "-t mp4 -S res:720 --recode-video mp4");
         let mp3 = Preset::Audio { format: AudioFormat::Mp3 };
         assert_eq!(pick(None, Some("251"), mp3), "-f 251 -x --audio-format mp3 --audio-quality 0");
     }

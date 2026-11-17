@@ -65,6 +65,8 @@ describe("applying changes from Rust", () => {
     ]);
     expect(useApp.getState().sheet).toEqual({ kind: "playlist" });
     apply([{ type: "playlistEntries", data: { previewId: "p", entries: [{ ...entry, id: "e2" }] } }]);
+    // The same batch again (two listeners, a replay) adds nothing.
+    apply([{ type: "playlistEntries", data: { previewId: "p", entries: [{ ...entry, id: "e2" }] } }]);
     const status = useApp.getState().preview?.status;
     expect(status?.status === "playlist" && status.entries.map((e) => e.id)).toEqual(["e1", "e2"]);
   });

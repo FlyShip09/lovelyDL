@@ -11,6 +11,7 @@ import { commands } from "../../ipc";
 import { dismissPreview, openSheet, startPreview, updatePreview, useApp } from "../../store/app";
 import { codecName, formatBytes, formatClock } from "../../store/derive";
 import { s } from "../../strings";
+import { OptionsSheet } from "../downloads/OptionsSheet";
 import { PresetControls } from "../downloads/PreviewCard";
 import { Thumb } from "../downloads/Thumb";
 import styles from "./sheets.module.css";
@@ -422,6 +423,7 @@ export function Sheets() {
       {kind === "updates" && <UpdatesSheet />}
       {kind === "playlist" && <PlaylistSheet />}
       {sheet?.kind === "formats" && <FormatsSheet jobId={sheet.jobId} />}
+      {kind === "options" && <OptionsSheet />}
     </Sheet>
   );
 }

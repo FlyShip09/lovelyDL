@@ -16,6 +16,16 @@ const screens: Screen[] = [
   { name: "busy", url: "/?scenario=busy&frozen=1" },
   { name: "preview", url: "/?scenario=preview&frozen=1" },
   { name: "ambiguous", url: "/?scenario=ambiguous&frozen=1" },
+  {
+    name: "options",
+    url: "/?scenario=preview&frozen=1",
+    then: (p) => p.getByRole("button", { name: "Options…" }).click(),
+  },
+  {
+    name: "formats",
+    url: "/?scenario=preview&frozen=1",
+    then: (p) => p.getByRole("button", { name: "Advanced…" }).click(),
+  },
   { name: "errors", url: "/?scenario=errors&frozen=1" },
   {
     name: "failed",

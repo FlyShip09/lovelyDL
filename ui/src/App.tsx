@@ -1,5 +1,4 @@
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect } from "react";
 
 import styles from "./App.module.css";
 import { MenuHost } from "./components/Menu";
@@ -12,7 +11,7 @@ import { Sidebar } from "./features/shell/Sidebar";
 import { Toolbar } from "./features/shell/Toolbar";
 import { useGlobalInput } from "./features/shell/useGlobalInput";
 import { smooth } from "./motion/tokens";
-import { connect, useApp } from "./store/app";
+import { useApp, useConnection } from "./store/app";
 
 export function App() {
   const ready = useApp((s) => s.ready);
@@ -22,11 +21,7 @@ export function App() {
   const onboarding = useApp((s) => s.sheet?.kind === "onboarding");
   useGlobalInput();
 
-  useEffect(() => {
-    let unlisten: (() => void) | undefined;
-    void connect().then((stop) => (unlisten = stop));
-    return () => unlisten?.();
-  }, []);
+  useConnection();
 
   if (!ready) return null;
   if (onboarding) return <Onboarding />;

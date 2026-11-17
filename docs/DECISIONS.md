@@ -189,3 +189,17 @@ All run with yt-dlp 2026.10.26 on this PC.
 - Rows carry their own buttons (pause, cancel, retry), which an `option` may not contain. The
   Downloads and History lists are ARIA grids with rows and grid cells; the playlist sheet,
   whose rows hold no buttons, stays a listbox with arrow keys and Space.
+
+## 2026-11-17 · Compatible MP4 re-encodes when it has to
+
+- `-t mp4` only remuxes, which fails when the site offers no H.264 (an Internet Archive
+  MPEG-2 ad failed with "Conversion failed!"). The preset now adds `--recode-video mp4`;
+  yt-dlp then ignores the alias's remux, re-encodes only when the result is not already MP4,
+  and leaves H.264 downloads untouched ("already is in target format mp4"). Checked on both.
+
+## 2026-11-17 · The UI's connection survives React's double mount
+
+- In development React mounts twice; the first mount's cleanup ran before its listener
+  existed, so every change was applied twice and streamed playlist entries showed 32 of 17.
+  `useConnection` now removes a listener that arrives after unmount, and appended entries
+  skip ids already present.
