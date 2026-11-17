@@ -143,3 +143,26 @@ test("select all with a search picks only the matches", async ({ page }) => {
   await sheet.getByRole("searchbox").fill("");
   await expect(sheet.getByRole("button", { name: "Download 8 videos" })).toBeEnabled();
 });
+
+test("Windows gets caption buttons, not the three lights", async ({ page }) => {
+  await page.goto("/?scenario=empty");
+  for (const name of ["Minimize", "Maximize", "Close"]) {
+    await expect(page.getByRole("button", { name, exact: true })).toBeVisible();
+  }
+  await expect(page.getByRole("button", { name: "Zoom" })).toHaveCount(0);
+});
+
+test.describe("on a Mac", () => {
+  test.use({
+    userAgent:
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+  });
+
+  test("the three lights stay, and there are no caption buttons", async ({ page }) => {
+    await page.goto("/?scenario=empty");
+    for (const name of ["Close", "Minimize", "Zoom"]) {
+      await expect(page.getByRole("button", { name, exact: true })).toHaveCount(1);
+    }
+    await expect(page.getByRole("button", { name: "Maximize" })).toHaveCount(0);
+  });
+});

@@ -82,6 +82,9 @@ fn start(root: &Path) -> (Engine, UnboundedReceiver<Vec<Change>>) {
         user_agent: "lovelyDL/test".into(),
         // Nothing in these tests may reach the real GitHub.
         api: Some("http://127.0.0.1:9".into()),
+        // Tests must not sit through the real wait between automatic retries, but it has to
+        // outlast the change window (100 ms) so the waiting state is actually seen.
+        retry_backoff: Duration::from_millis(250),
     })
     .expect("engine starts");
     (engine, rx)

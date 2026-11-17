@@ -260,6 +260,12 @@ export const s = {
   concurrentNote: "How many run at the same time, and from one site.",
   concurrentLabel: "Downloads at once",
   perSite: "per site",
+  oneDownloading: "1 downloading",
+  someDownloading: (n: number) => `${n} downloading`,
+  ifADownloadDropsRow: "If a download drops:",
+  autoRetrySwitch: "Start it again automatically",
+  autoRetryNote:
+    "Three tries, waiting a little longer each time. Only for connection trouble, never for a video that is gone.",
   perSiteLabel: "Downloads per site",
   notificationsRow: "Notifications:",
   notificationsSwitch: "Tell me when downloads finish or fail",
@@ -379,6 +385,7 @@ export const sponsorCategoryLabel: Record<string, string> = {
 
 export const stageLabel: Record<Stage, string> = {
   waiting: "Waiting",
+  retrying: "Connection lost — trying again",
   probing: "Getting details",
   preparing: "Preparing",
   video: "Downloading video",

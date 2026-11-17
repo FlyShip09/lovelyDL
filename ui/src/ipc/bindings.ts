@@ -575,6 +575,8 @@ export type Settings_Deserialize = {
 	/**  One yt-dlp argument per entry. Used only when `custom_args_enabled` is set. */
 	customArgs?: string[],
 	concurrentFragments?: number,
+	/**  Start a download again by itself after a passing failure (a dropped connection). */
+	autoRetry?: boolean,
 	notifications?: boolean,
 	noticeCopiedLinks?: boolean,
 	trayIcon?: boolean,
@@ -613,6 +615,8 @@ export type Settings_Serialize = {
 	/**  One yt-dlp argument per entry. Used only when `custom_args_enabled` is set. */
 	customArgs: string[],
 	concurrentFragments: number,
+	/**  Start a download again by itself after a passing failure (a dropped connection). */
+	autoRetry: boolean,
 	notifications: boolean,
 	noticeCopiedLinks: boolean,
 	trayIcon: boolean,
@@ -646,7 +650,9 @@ export type Source = "paste" | "typed" | "drop" | "deepLink" | "clipboard" | "pl
 export type SponsorBlock = "off" | "remove" | "mark";
 
 /**  What the job is doing right now. The UI turns this into words. */
-export type Stage = "waiting" | "probing" | "preparing" | "video" | "audio" | "media" | "subtitles" | "merging" | "extractingAudio" | "converting" | "embeddingMetadata" | "embeddingThumbnail" | "embeddingSubtitles" | "sponsorBlock" | "fixing" | "moving" | "waitingForLive" | "done";
+export type Stage = "waiting" | 
+/**  Failed on something passing; the engine starts it again shortly. */
+"retrying" | "probing" | "preparing" | "video" | "audio" | "media" | "subtitles" | "merging" | "extractingAudio" | "converting" | "embeddingMetadata" | "embeddingThumbnail" | "embeddingSubtitles" | "sponsorBlock" | "fixing" | "moving" | "waitingForLive" | "done";
 
 /**  System facts the UI styles itself with. Filled in by the shell, not the engine. */
 export type SystemInfo = {

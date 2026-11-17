@@ -235,3 +235,35 @@ export function validProxy(value: string): boolean {
     )
   );
 }
+
+export interface Running {
+  count: number;
+  /** Bytes a second across everything downloading now, or null while none reports a speed. */
+  speed: number | null;
+  /** How far the running downloads are as a whole, weighted by size; null when unknown. */
+  fraction: number | null;
+}
+
+/** What the queue is doing as a whole, for the summary under the sidebar. */
+export function running(jobs: Record<string, Job>): Running {
+  let count = 0;
+  let speed = 0;
+  let anySpeed = false;
+  let done = 0;
+  let total = 0;
+  for (const job of Object.values(jobs)) {
+    if (!isActive(job.state)) continue;
+    count += 1;
+    const p = job.progress;
+    if (p.speed !== null) {
+      speed += p.speed;
+      anySpeed = true;
+    }
+    // Sized jobs drive the bar; one without a size would otherwise drag it to zero.
+    if (p.total) {
+      total += p.total;
+      done += p.downloaded ?? (p.fraction === null ? 0 : p.fraction * p.total);
+    }
+  }
+  return { count, speed: anySpeed ? speed : null, fraction: total > 0 ? Math.min(1, done / total) : null };
+}

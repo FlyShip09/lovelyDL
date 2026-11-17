@@ -57,6 +57,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }),
         user_agent: concat!("lovelyDL/", env!("CARGO_PKG_VERSION"), " (dl example)").into(),
         api: None,
+        retry_backoff: Config::DEFAULT_RETRY_BACKOFF,
     })?;
 
     let mut settings = engine.snapshot().await?.settings;

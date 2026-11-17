@@ -2,14 +2,25 @@
 
 <h1 align="center">lovelyDL</h1>
 
-<p align="center">A calm, native-feeling video and audio downloader for Windows, built on yt-dlp.</p>
+<p align="center">
+  <b>A calm, native-feeling video and audio downloader for Windows.</b><br>
+  Free and open source. Paste a link, see what you will get, press Download.
+</p>
+
+<p align="center">
+  <a href="https://github.com/FlyShip09/lovelyDL/actions/workflows/ci.yml"><img src="https://github.com/FlyShip09/lovelyDL/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
+  <img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" alt="License: GPL-3.0-or-later">
+  <img src="https://img.shields.io/badge/platform-Windows-0078D4" alt="Platform: Windows">
+  <img src="https://img.shields.io/badge/built%20with-Tauri%202%20%2B%20Rust-24C8DB" alt="Built with Tauri 2 and Rust">
+</p>
+
+lovelyDL is a desktop app (a GUI) for [yt-dlp](https://github.com/yt-dlp/yt-dlp), so it
+works with the 1,000+ sites yt-dlp supports. It adds what a command line cannot: a preview
+before anything is saved, a queue that survives restarts, presets that say what they
+produce, playlists with a real selection sheet, and a history you can search. No account,
+no ads, no telemetry.
 
 <p align="center"><img src="docs/screenshots/app/preview-light.png" width="760" alt="lovelyDL showing the preview of a pasted link, with format and quality pop-ups and a Download button"></p>
-
-Paste a link, see what you will get, press Download. lovelyDL wraps
-[yt-dlp](https://github.com/yt-dlp/yt-dlp) in a quiet, Mac-style window: a queue that
-survives restarts, presets that say what they produce, playlists with a real selection
-sheet, and a history you can search.
 
 **Download only what you have the right to save.** lovelyDL does not get around DRM or
 paywalls, and it does not help anyone do so.
@@ -24,6 +35,8 @@ paywalls, and it does not help anyone do so.
   that tops out at 1080p), resolution caps from 2160p to 480p,
   and audio as M4A, MP3, Opus or FLAC. An Advanced format picker lists every stream.
 - **Queue**: 1–8 downloads at once (3 by default, 2 per site), pause, resume, cancel, retry,
+  waiting downloads show their titles and thumbnails before their turn, and a download that
+  drops out starts itself again,
   drag to reorder (or Alt+↑/↓), partial downloads that resume after a restart. A new
   download never replaces an older file with the same name; it gets a number.
 - **Playlists and channels**: a selection sheet with search, select all or none, shift-click
@@ -46,8 +59,10 @@ paywalls, and it does not help anyone do so.
 
 ## Install
 
-Download `lovelyDL_x.y.z_x64-setup.exe` from
-[Releases](https://github.com/FlyShip09/lovelyDL/releases) and run it. It installs for the
+Installers are published on the
+[Releases](https://github.com/FlyShip09/lovelyDL/releases) page as
+`lovelyDL_x.y.z_x64-setup.exe`. If no release is listed there yet, build it yourself with
+the three commands under [Build from source](#build-from-source). The installer is for the
 current user only and needs no administrator rights. It is built and tested on Windows 11;
 Windows 10 should work but has not been tested. The setup installs WebView2 if it is missing.
 
@@ -128,6 +143,11 @@ npm run typecheck && npm run lint && npm test && npm run e2e
 See [CONTRIBUTING.md](CONTRIBUTING.md) for more, [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 for how it fits together, and [docs/RELEASING.md](docs/RELEASING.md) for releases and
 signing.
+
+## Support the project
+
+If lovelyDL is useful to you, a star on GitHub helps other people find it. Bug reports with
+the row's **Copy details** text are the most helpful thing you can send.
 
 ## License
 

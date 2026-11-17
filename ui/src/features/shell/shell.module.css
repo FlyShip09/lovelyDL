@@ -195,3 +195,29 @@
 .bannerText {
   color: var(--label);
 }
+
+/* The queue's own line, under the sections. */
+.running {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  /* Sits at the foot of the sidebar, out of the sections' way. */
+  margin: auto var(--s3) var(--s3);
+  padding: var(--s2);
+  border-radius: var(--r-control);
+  background: var(--fill-1);
+}
+
+.runningLine {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s2);
+  font-size: var(--text-sub);
+  color: var(--label-2);
+}
+
+.runningSpeed {
+  font-variant-numeric: tabular-nums;
+  color: var(--label);
+}

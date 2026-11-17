@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { Resolved } from "../ipc";
+import type { Job, Resolved } from "../ipc";
 import { job } from "../test/fixtures";
 import {
   codecName,
@@ -8,6 +8,7 @@ import {
   formatClock,
   groupJobs,
   resolvedSize,
+  running,
   seconds,
   resolvedSummary,
   rowLabel,
@@ -158,6 +159,22 @@ describe("rows", () => {
       "host:99999999",
     ])
       expect(validProxy(bad), bad).toBe(false);
+  });
+
+  it("adds up what the queue is doing as a whole", () => {
+    const active = (id: string, p: Partial<Job["progress"]>): Job =>
+      job({ id, state: "downloading", progress: { ...job().progress, ...p } });
+    const jobs = Object.fromEntries(
+      [
+        active("a", { speed: 1_000_000, downloaded: 25_000_000, total: 100_000_000 }),
+        active("b", { speed: 500_000, downloaded: 5_000_000, total: 100_000_000 }),
+        // A stream of unknown size reports no total: it must not drag the bar down.
+        active("c", { speed: null, downloaded: 1_000_000, total: null }),
+        job({ id: "d", state: "completed" }),
+      ].map((j) => [j.id, j]),
+    );
+    expect(running(jobs)).toEqual({ count: 3, speed: 1_500_000, fraction: 0.15 });
+    expect(running({})).toEqual({ count: 0, speed: null, fraction: null });
   });
 
   it("serves thumbnails through the app, never straight from the internet", () => {

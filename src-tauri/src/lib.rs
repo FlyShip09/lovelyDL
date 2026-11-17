@@ -303,6 +303,7 @@ fn setup(app: &mut tauri::App, specta: &tauri_specta::Builder<Wry>) -> anyhow::R
         }),
         user_agent: format!("lovelyDL/{}", env!("CARGO_PKG_VERSION")),
         api: None,
+        retry_backoff: Config::DEFAULT_RETRY_BACKOFF,
     };
     let engine = tauri::async_runtime::block_on(async move { Engine::start(config) })?;
     let snapshot = tauri::async_runtime::block_on(engine.snapshot())?;

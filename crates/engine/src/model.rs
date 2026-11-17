@@ -41,6 +41,8 @@ pub enum JobState {
 #[serde(rename_all = "camelCase")]
 pub enum Stage {
     Waiting,
+    /// Failed on something passing; the engine starts it again shortly.
+    Retrying,
     Probing,
     Preparing,
     Video,
@@ -512,6 +514,8 @@ pub struct Settings {
     /// One yt-dlp argument per entry. Used only when `custom_args_enabled` is set.
     pub custom_args: Vec<String>,
     pub concurrent_fragments: u32,
+    /// Start a download again by itself after a passing failure (a dropped connection).
+    pub auto_retry: bool,
     pub notifications: bool,
     pub notice_copied_links: bool,
     pub tray_icon: bool,
@@ -549,7 +553,10 @@ impl Default for Settings {
             custom_js_runtime: String::new(),
             custom_args_enabled: false,
             custom_args: Vec::new(),
-            concurrent_fragments: 1,
+            // yt-dlp's own default is one; four pieces at a time is much faster on the
+            // fragmented streams most sites serve, and is gentle enough to stay polite.
+            concurrent_fragments: 4,
+            auto_retry: true,
             notifications: true,
             notice_copied_links: false,
             tray_icon: false,

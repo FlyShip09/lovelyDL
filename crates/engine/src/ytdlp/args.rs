@@ -327,6 +327,8 @@ mod tests {
             "--convert-thumbnails",
             "jpg",
             "--embed-chapters",
+            "--concurrent-fragments",
+            "4",
             "-P",
             r"home:D:\Videos",
             "-P",

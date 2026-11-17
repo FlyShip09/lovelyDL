@@ -46,6 +46,7 @@ async fn a_local_video_goes_through_the_real_yt_dlp() {
         }),
         user_agent: "lovelyDL/test".into(),
         api: Some("http://127.0.0.1:9".into()),
+        retry_backoff: Config::DEFAULT_RETRY_BACKOFF,
     })
     .unwrap();
     engine.add_links(link, Source::Paste).await.unwrap();

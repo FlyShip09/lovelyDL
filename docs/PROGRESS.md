@@ -321,6 +321,21 @@ Not verified, and why:
 - **A failed app update**: needs a signed release to fail against.
 - **Narrator itself, Acrylic, toasts, tray menu clicks, keep-awake**: as in M5 and M6.
 
+## After M8 · Windows look, motion, promotion — done
+
+Asked for by the owner after the first push: a more professional Windows look, smoother
+motion, a more capable app, an ad, and a repository that is easier to find.
+
+| What | Checked how |
+|---|---|
+| First CI run on GitHub | All three jobs passed (Rust, UI, installer build); nothing to fix |
+| Caption buttons on Windows, lights only on macOS | Real app: Maximize → Restore → Maximize by real clicks, and Minimize confirmed with `IsIconic`. Two tests pin it, one with a Mac user agent |
+| Waiting downloads get titles ahead of their turn | Engine test with one slot (each link probed exactly once, five runs); real app: two waiting Blender films showed titles and thumbnails while two others downloaded |
+| Press feedback, hover states, progress light, entrances | Screens and axe in light, dark and contrast; off under Reduce Motion by CSS. Motion itself was judged by eye in the mock, not measured |
+| Empty Downloads view | New centered invitation; screenshots in all three themes |
+| README screenshots | Retaken from inside the app (`page.screenshot` over the debugging port), so nothing else on the screen can appear in them. A first attempt with a screen grab caught another window and was discarded before any commit |
+| GitHub | Description and 20 topics set; README hero with badges and the ad |
+
 ## Next
 
 Nothing planned. Open decisions for the owner are in the final report: code signing,

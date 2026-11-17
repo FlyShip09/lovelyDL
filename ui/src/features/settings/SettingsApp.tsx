@@ -157,6 +157,13 @@ function General({ st }: { st: Settings }) {
           onChange={(maxPerSite) => change({ maxPerSite })}
         />
       </Row>
+      <Row label={s.ifADownloadDropsRow} note={s.autoRetryNote}>
+        <Switch
+          label={s.autoRetrySwitch}
+          checked={st.autoRetry}
+          onChange={(autoRetry) => change({ autoRetry })}
+        />
+      </Row>
       <div className={styles.separator} />
       <Row label={s.notificationsRow}>
         <Switch

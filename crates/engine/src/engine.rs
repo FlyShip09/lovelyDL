@@ -70,6 +70,12 @@ pub struct Config {
     pub user_agent: String,
     /// GitHub API base URL override, for tests.
     pub api: Option<String>,
+    /// Wait before the first automatic retry; it doubles with each attempt. Short in tests.
+    pub retry_backoff: Duration,
+}
+
+impl Config {
+    pub const DEFAULT_RETRY_BACKOFF: Duration = Duration::from_secs(5);
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -162,6 +168,9 @@ struct Core {
     peeked: HashSet<JobId>,
     /// Jobs saving under a numbered name because the plain one was taken: id → number.
     renamed: HashMap<JobId, u32>,
+    /// Queued jobs waiting out an automatic retry, and when they may start.
+    retry_at: HashMap<JobId, Instant>,
+    retry_backoff: Duration,
     logs: HashMap<JobId, JobLog>,
     preview: Option<Preview>,
     preview_run: Option<PreviewRun>,
@@ -327,6 +336,8 @@ impl Engine {
             peeking: None,
             peeked: HashSet::new(),
             renamed: HashMap::new(),
+            retry_at: HashMap::new(),
+            retry_backoff: config.retry_backoff,
             logs: HashMap::new(),
             preview: None,
             preview_run: None,
@@ -916,6 +927,7 @@ impl Core {
             *per_site.entry(Self::site_of(job)).or_default() += 1;
         }
         let stopping: HashSet<&JobId> = self.stopping.values().collect();
+        let now = Instant::now();
         let mut start = Vec::new();
         for job in self.jobs.iter().filter(|j| j.state == JobState::Queued) {
             if active >= self.settings.max_concurrent as usize {
@@ -924,9 +936,11 @@ impl Core {
             let site = per_site.entry(Self::site_of(job)).or_default();
             // A job whose old process is still exiting waits, so two never share partial files.
             // One being looked at ahead of its turn waits for that answer instead of asking twice.
+            // One waiting out an automatic retry keeps its place but does not start yet.
             if *site >= self.settings.max_per_site
                 || stopping.contains(&job.id)
                 || self.peeking.as_ref() == Some(&job.id)
+                || self.retry_at.get(&job.id).is_some_and(|at| *at > now)
             {
                 continue;
             }
@@ -951,7 +965,14 @@ impl Core {
             return;
         }
         let Some(tools) = self.tools() else { return };
-        let waiting = |j: &&Job| j.state == JobState::Queued && j.title.is_empty() && !self.peeked.contains(&j.id);
+        // One waiting out a retry is left alone: it already knows the site, and asking again
+        // would be one more request at exactly the wrong moment.
+        let waiting = |j: &&Job| {
+            j.state == JobState::Queued
+                && j.title.is_empty()
+                && !self.peeked.contains(&j.id)
+                && !self.retry_at.contains_key(&j.id)
+        };
         let Some((id, url)) = self.jobs.iter().find(waiting).map(|j| (j.id.clone(), j.url.clone())) else { return };
         self.peeked.insert(id.clone());
         self.peeking = Some(id.clone());
@@ -1345,10 +1366,44 @@ impl Core {
     fn fail(&mut self, id: &str, error: JobError) {
         let Some(i) = self.index(id) else { return };
         tracing::info!(job = id, kind = ?error.kind, detail = error.detail, "download failed");
+        if self.auto_retry_in(i, &error) {
+            let job = &mut self.jobs[i];
+            job.error = Some(error);
+            job.attempts += 1;
+            let wait = self.retry_backoff * 2u32.pow(self.jobs[i].attempts.min(4) - 1);
+            tracing::info!(job = id, attempt = self.jobs[i].attempts, ?wait, "trying again by itself");
+            self.retry_at.insert(id.to_string(), Instant::now() + wait);
+            if self.transition(id, JobState::Queued) {
+                // After the move to Queued, which would otherwise read as plain waiting.
+                self.jobs[i].progress = Progress { stage: Stage::Retrying, ..Progress::default() };
+                self.changed(i);
+                // Wake the queue when the wait is over; the scheduler holds it back until then.
+                let (me, id) = (self.me.clone(), id.to_string());
+                tokio::spawn(async move {
+                    tokio::time::sleep(wait).await;
+                    let _ = me.send(Box::new(move |core| {
+                        core.retry_at.remove(&id);
+                        core.needs_pump = true;
+                    }));
+                });
+            }
+            return;
+        }
+        self.retry_at.remove(id);
         self.jobs[i].error = Some(error);
         if self.transition(id, JobState::Failed) {
             self.notify(id, false);
         }
+    }
+
+    /// Whether a failure is worth another go without asking: a passing network fault, a few
+    /// times over, and only when the user has left that on.
+    fn auto_retry_in(&self, i: usize, error: &JobError) -> bool {
+        const MAX_ATTEMPTS: u32 = 3;
+        self.settings.auto_retry
+            && self.jobs[i].attempts < MAX_ATTEMPTS
+            && self.jobs[i].group.is_none()
+            && matches!(error.kind, ErrorKind::Network | ErrorKind::Http429 | ErrorKind::Crashed)
     }
 
     /// One notice per finished download; a playlist gets a single notice when its last item ends.
@@ -1416,6 +1471,7 @@ impl Core {
     }
 
     fn retry(&mut self, id: &str) {
+        self.retry_at.remove(id);
         let Some(i) = self.index(id) else { return };
         if !matches!(self.jobs[i].state, JobState::Failed | JobState::Canceled) {
             return;

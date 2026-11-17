@@ -351,3 +351,27 @@ All run with yt-dlp 2026.10.26 on this PC.
   waiting job under examination is skipped by the scheduler until the answer is in). A
   DRM-protected item is refused right there.
 
+## 2026-11-17 · A dropped connection is not the user's problem
+
+- A failure that is plainly passing (a dropped connection, a 429, yt-dlp dying with nothing to
+  say) now puts the download back in the queue by itself: three goes, waiting 5 s, then 10 s,
+  then 20 s, saying "Connection lost — trying again" meanwhile. A video that is gone, private
+  or region-blocked is never retried, because nothing about it will change. Playlist items are
+  left to the playlist. The whole thing can be switched off in Settings.
+- The wait is a `Config` value so tests do not sit through it. The queue holds such a job back
+  until its wait is over, and the look-ahead leaves it alone rather than asking the site again
+  at exactly the wrong moment.
+
+## 2026-11-17 · Four pieces at a time
+
+- `--concurrent-fragments` was 1, yt-dlp's own default. Most sites now serve video in small
+  fragments, and four at a time is much faster on them while staying polite. It is a setting,
+  so anyone on a thin connection can put it back.
+
+## 2026-11-17 · The queue says how it is doing
+
+- Under the sidebar sections there is now one line for the whole queue: how many are running,
+  how fast together, and a single bar. It is there only while something runs. The selector is
+  shallow-compared, because it builds a fresh object and only its numbers matter (a plain
+  selector re-rendered forever).
+

@@ -176,7 +176,8 @@ async fn a_crash_without_a_word_is_reported_as_one() {
 
 #[tokio::test]
 async fn errors_are_classified_from_real_output() {
-    let mut h = ready(Setup::default()).await;
+    // This one is about the classifier, so nothing starts itself again behind its back.
+    let mut h = ready(Setup { settings: Box::new(|s| s.auto_retry = false), ..Setup::default() }).await;
     let cases = [
         ("unavailable", ErrorKind::Unavailable, None, false),
         ("format_unavailable", ErrorKind::FormatUnavailable, Some(Fix::ChooseFormat), false),
@@ -492,4 +493,33 @@ async fn waiting_downloads_get_their_titles_ahead_of_their_turn() {
     let modes = h.modes("generic_direct");
     assert_eq!(modes.iter().filter(|m| *m == "probe").count(), 3, "{modes:?}");
     assert_eq!(modes.iter().filter(|m| *m == "download").count(), 3, "{modes:?}");
+}
+
+#[tokio::test]
+async fn a_passing_failure_starts_itself_again_but_a_dead_link_does_not() {
+    let mut h = ready(Setup::default()).await;
+    // Two links go straight to the queue: one site is briefly down, the other video is gone.
+    let links = [fake_url("http500"), fake_url("unavailable")].join(
+        "
+",
+    );
+    h.engine.add_links(links, Source::Paste).await.unwrap();
+
+    // Between tries it waits in the queue and says so, rather than looking finished.
+    h.wait_for("waiting to try again", |h| {
+        h.jobs.iter().any(|j| j.state == JobState::Queued && j.progress.stage == Stage::Retrying)
+    })
+    .await;
+    // The site stays down, so it gives up after three goes and leaves the error for the user.
+    h.wait_for("both finished", |h| h.jobs.iter().all(|j| j.state == JobState::Failed) && h.jobs.len() == 2).await;
+
+    let down = h.job("/http500");
+    assert_eq!(down.attempts, 3);
+    assert_eq!(down.error.as_ref().map(|e| e.kind), Some(ErrorKind::Network));
+    assert_eq!(h.modes("http500").len(), 4, "the first go plus three more");
+    // Nothing about a removed video will change by itself, so it is left alone.
+    assert_eq!(h.job("/unavailable").attempts, 0);
+    assert_eq!(h.modes("unavailable").len(), 1);
+    // One notice each, when they finally give up; not one per attempt.
+    assert_eq!(h.notices().len(), 2);
 }

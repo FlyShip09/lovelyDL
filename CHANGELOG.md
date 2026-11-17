@@ -18,3 +18,9 @@ The first version.
 - yt-dlp, ffmpeg and Deno installed, verified, updated and rolled back by the app.
 - Taskbar progress and badge, notifications, an optional tray icon, keep-awake, drag-out,
   light, dark and contrast themes, Reduce Motion.
+- Windows caption buttons at the top right and the app's name at the top left; press
+  feedback and eased hover states throughout.
+- Waiting downloads show their titles and thumbnails before their turn.
+- Downloads that drop out start themselves again, three times, waiting longer each time.
+- Four fragments at a time by default, which is much faster on most sites.
+- A line under the sidebar sections showing how many downloads run and how fast.
