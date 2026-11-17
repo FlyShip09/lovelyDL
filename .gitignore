@@ -1,0 +1,24 @@
+# Rust
+target/
+# Node
+node_modules/
+/ui/dist/
+/ui/test-results/
+/ui/playwright-report/
+# Tauri
+/src-tauri/gen/schemas/
+# OS and editors
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+# Secrets: updater keys and signing material never belong in the repo
+*.key
+*.key.pub
+*.p12
+*.pem
+.env
+.env.*
+# Local dev scratch
+/.dev/
