@@ -207,6 +207,11 @@ export const errorCopy: Record<ErrorKind, { title: string; body: string }> = {
   unknown: { title: "Download failed", body: "yt-dlp reported a problem." },
 };
 
+/** The explanation for an error: ours, or yt-dlp's own words when we have nothing better. */
+export function errorBody(kind: ErrorKind, detail: string): string {
+  return (kind === "unknown" || kind === "crashed") && detail ? detail : errorCopy[kind].body;
+}
+
 export const fixLabel: Record<Fix, string> = {
   retry: "Retry",
   useCookies: "Use cookies from a browser…",

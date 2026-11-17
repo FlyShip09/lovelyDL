@@ -25,6 +25,20 @@ if (command === "add") {
     await page.waitForTimeout(1000);
     console.log(`t+${i + 1}s: ${await text()}`);
   }
+} else if (command === "download") {
+  // Adds a link, presses Download in the preview, and reports each change until it settles.
+  const field = page.locator("[data-url-field]");
+  await field.fill(arg);
+  await field.press("Enter");
+  await page.getByRole("button", { name: "Download", exact: true }).click({ timeout: 60_000 });
+  let last = "";
+  for (let i = 0; i < 240; i++) {
+    await page.waitForTimeout(500);
+    const now = await text();
+    if (now !== last) console.log(`t+${(i + 1) / 2}s: ${now}`);
+    last = now;
+    if (/Completed|Failed/.test(now) && !/Active/.test(now)) break;
+  }
 } else if (command === "eval") {
   console.log(await page.evaluate(arg));
 } else {

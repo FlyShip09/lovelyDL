@@ -99,7 +99,29 @@ Not verified, and why:
   job appeared. Not reproduced yet; the same flow with a YouTube link works.
 - Toasts, taskbar badge and progress: wired but not yet observed (M3 runs real downloads).
 
+## M3 · Main flow — done
+
+Verified in the real app (WebView2 driven through its debugging port, `scripts/drive-app.mjs`,
+`scripts/live-check.mjs`, `scripts/quit-check.mjs`), against yt-dlp 2026.10.26 and ffmpeg 9.0.2:
+
+| What | How |
+|---|---|
+| Paste, preview, download, progress, done | YouTube test video: preview in ~2.5 s, exact size replaces the estimate, video (1 of 2) and audio (2 of 2) with percent, speed and time left, metadata, saving, the row holds for a beat, then Completed: 40.2 MB file in Downloads |
+| Five links at a concurrency of two | Local throttled server (`scripts/test-server.py`): peak exactly 2 active |
+| Pause and resume continue the partial file | `.part` file present while paused; on resume the server received `Range: bytes=3587681-` |
+| Cancel cleans up | The job's temp folder was gone 1.5 s after Cancel |
+| Quit and relaunch resumes | Window close showed "Quit and pause 1 download?"; after Quit the `.part` (3,582,026 bytes) stayed; after relaunch the row came back at 31 % and the next request was `Range: bytes=3582026-`; finished at 11.6 MB |
+| Taskbar badge and progress | Screen capture during a download: red "1" badge and a progress bar on the taskbar button, both gone when it finished |
+| History | Real app: newest first with date, size and site; search narrows; the Failed filter shows "No matches" |
+| Failed previews and error rows | Real app: TikTok's "IP address is blocked" now reads as a regional block; unknown errors show yt-dlp's own line (the brief's rule), plus Copy Details |
+
+Not verified, and why:
+
+- **Toasts.** The app's toast call returns without error, but this PC shows no toasts at all:
+  a plain PowerShell test toast also did not appear (Do Not Disturb or notifications off).
+- `LOVELYDL_HOME` keeps these live runs out of the real settings and Downloads folder.
+
 ## Next
 
-M3: the main flow end to end in the real app (paste, preview, download, progress, done),
-history and error rows, notifications and the taskbar.
+M4: power features (subtitles, ranges, SponsorBlock, cookies, live, network options) checked
+against real output; then M5.

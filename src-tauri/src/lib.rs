@@ -31,7 +31,7 @@ pub struct AppState {
     pub update: Mutex<Option<tauri_plugin_updater::Update>>,
     /// Clipboard sequence number already offered (or dismissed), so an offer is made once.
     pub clipboard_seen: AtomicU32,
-    focused: AtomicBool,
+    pub(crate) focused: AtomicBool,
     quitting: AtomicBool,
 }
 
@@ -242,14 +242,20 @@ fn setup(app: &mut tauri::App, specta: &tauri_specta::Builder<Wry>) -> anyhow::R
     specta.mount_events(app);
     let paths = app.path();
     let local = paths.app_local_data_dir()?;
-    init_logging(&paths.app_log_dir()?);
+    // `LOVELYDL_HOME` keeps every folder under one path: for tests and fresh-install runs that
+    // must not touch the real settings, tools or Downloads folder.
+    let test_home = std::env::var_os("LOVELYDL_HOME").map(std::path::PathBuf::from);
+    init_logging(&test_home.as_ref().map_or_else(|| paths.app_log_dir(), |h| Ok(h.join("logs")))?);
     tracing::info!(version = env!("CARGO_PKG_VERSION"), build = os_build(), "lovelyDL starting");
-    let dirs = Dirs {
-        data: paths.app_data_dir()?,
-        cache: local.join("cache"),
-        bin: local.join("bin"),
-        downloads: paths.download_dir().or_else(|_| paths.home_dir().map(|h| h.join("Downloads")))?,
-        home: paths.home_dir().ok(),
+    let dirs = match &test_home {
+        Some(root) => Dirs { home: paths.home_dir().ok(), ..Dirs::under(root) },
+        None => Dirs {
+            data: paths.app_data_dir()?,
+            cache: local.join("cache"),
+            bin: local.join("bin"),
+            downloads: paths.download_dir().or_else(|_| paths.home_dir().map(|h| h.join("Downloads")))?,
+            home: paths.home_dir().ok(),
+        },
     };
     let identifier = app.config().identifier.clone();
     let shell = Arc::new(Mutex::new(Shell::new(Settings::default(), &identifier)));

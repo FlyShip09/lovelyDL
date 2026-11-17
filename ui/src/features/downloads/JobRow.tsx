@@ -10,7 +10,7 @@ import { commands } from "../../ipc";
 import { fade, smooth } from "../../motion/tokens";
 import { useApp } from "../../store/app";
 import { formatClock, formatSpeed, isActive, rowLabel, statusLine } from "../../store/derive";
-import { errorCopy, fixLabel, s } from "../../strings";
+import { errorBody, errorCopy, fixLabel, s } from "../../strings";
 import { applyFix, copy, jobMenu } from "./actions";
 import styles from "./downloads.module.css";
 import { Thumb } from "./Thumb";
@@ -158,7 +158,7 @@ export const JobRow = memo(function JobRow({ job, selected, selection, onSelect 
             transition={smooth}
           >
             <div className={styles.errorInner}>
-              <span className={styles.errorBody}>{copyText.body}</span>
+              <span className={`${styles.errorBody} selectable`}>{errorBody(error.kind, error.detail)}</span>
               <div className={styles.errorButtons} onMouseDown={(e) => e.stopPropagation()}>
                 {error.fix && (
                   <Button variant="primary" onClick={() => void applyFix(job)}>

@@ -16,7 +16,7 @@ import {
   useApp,
 } from "../../store/app";
 import { formatClock, heightName, resolvedSize, resolvedSummary, topsOutNote } from "../../store/derive";
-import { errorCopy, fixLabel, s } from "../../strings";
+import { errorBody, errorCopy, fixLabel, s } from "../../strings";
 import { copy } from "./actions";
 import styles from "./downloads.module.css";
 import { Thumb } from "./Thumb";
@@ -199,7 +199,9 @@ function Body({ preview }: { preview: Preview }) {
         <div className={styles.question}>
           <span className={styles.questionText}>
             <span className={styles.errorTitle}>{copyText.title}</span>
-            <span className={styles.errorBody}>{copyText.body}</span>
+            <span className={`${styles.errorBody} selectable`}>
+              {errorBody(status.error.kind, status.error.detail)}
+            </span>
           </span>
           <Button onClick={() => void copy(commands.jobDetails(preview.id))}>{s.copyDetails}</Button>
           {fix === "useCookies" || fix === "installComponents" || fix === "updateYtdlp" ? (

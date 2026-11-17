@@ -18,7 +18,7 @@ const RULES: &[(ErrorKind, &[&str])] = &[
     (MembersOnly, &["members-only", "join this channel"]),
     (AgeRestricted, &["confirm your age", "age-restricted", "inappropriate for some users"]),
     (Private, &["private video", "video is private"]),
-    (GeoBlocked, &["in your country", "geo restrict", "not available from your location"]),
+    (GeoBlocked, &["in your country", "geo restrict", "not available from your location", "ip address is blocked"]),
     (LiveNotStarted, &["live event will begin", "premieres in"]),
     (Http429, &["http error 429", "too many requests", "rate-limited"]),
     (SignIn, &["not a bot", "only available for registered users", "cookies for the authentication", "login required"]),

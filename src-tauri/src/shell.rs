@@ -109,9 +109,9 @@ impl Shell {
     }
 
     fn notify(&self, app: &AppHandle, notice: Notice) {
-        let focused = app
-            .get_webview_window("main")
-            .is_some_and(|w| w.is_focused().unwrap_or(false) && w.is_visible().unwrap_or(false));
+        // Tracked from window events: asking the window here would wait on the UI thread.
+        let focused =
+            app.try_state::<crate::AppState>().is_some_and(|s| s.focused.load(std::sync::atomic::Ordering::Relaxed));
         if focused || !self.settings.notifications {
             return;
         }
