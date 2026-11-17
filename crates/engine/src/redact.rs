@@ -29,9 +29,9 @@ const SECRET_FLAGS: [&str; 12] = [
 pub fn redact(text: &str, home: Option<&str>) -> String {
     let mut out = text.to_string();
     if let Some(home) = home.filter(|h| h.len() > 3) {
-        // Paths show up plain and JSON-escaped (doubled backslashes).
+        // Paths show up plain and JSON-escaped (doubled backslashes), in any letter case.
         let escaped = home.replace('\\', "\\\\");
-        out = out.replace(&escaped, "~").replace(home, "~");
+        out = replace_ignore_case(&replace_ignore_case(&out, &escaped, "~"), home, "~");
     }
     out = redact_headers(&out);
     out = redact_url_credentials(&out);
@@ -49,8 +49,32 @@ pub fn redact_args(args: &[String], home: Option<&str>) -> Vec<String> {
             continue;
         }
         hide_next = SECRET_FLAGS.contains(&arg.as_str());
-        out.push(redact(arg, home));
+        // The value can also be glued on: --password=secret, -psecret.
+        if let Some((flag, _)) = arg.split_once('=')
+            && flag.starts_with("--")
+            && SECRET_FLAGS.contains(&flag)
+        {
+            out.push(format!("{flag}={REDACTED}"));
+        } else if let Some(flag) = ["-u", "-p", "-2"].into_iter().find(|f| arg.len() > 2 && arg.starts_with(f)) {
+            out.push(format!("{flag}{REDACTED}"));
+        } else {
+            out.push(redact(arg, home));
+        }
     }
+    out
+}
+
+/// Windows paths match in any letter case. ASCII lower-casing keeps byte offsets intact.
+fn replace_ignore_case(text: &str, from: &str, to: &str) -> String {
+    let (hay, needle) = (text.to_ascii_lowercase(), from.to_ascii_lowercase());
+    let mut out = String::with_capacity(text.len());
+    let mut last = 0;
+    for (at, _) in hay.match_indices(&needle) {
+        out.push_str(&text[last..at]);
+        out.push_str(to);
+        last = at + needle.len();
+    }
+    out.push_str(&text[last..]);
     out
 }
 
@@ -150,6 +174,7 @@ mod tests {
         let home = r"C:\Users\someone";
         assert_eq!(redact(r"C:\Users\someone\Downloads\a.mp4", Some(home)), r"~\Downloads\a.mp4");
         assert_eq!(redact(r#""C:\\Users\\someone\\a.mp4""#, Some(home)), r#""~\\a.mp4""#);
+        assert_eq!(redact(r"c:\users\SOMEONE\a.mp4", Some(home)), r"~\a.mp4");
     }
 
     #[test]
@@ -167,6 +192,13 @@ mod tests {
         assert_eq!(
             redact_args(&args, None),
             ["--password", "[redacted]", "--add-headers", "[redacted]", "--", "https://a.test/?key=[redacted]"]
+        );
+        let glued: Vec<String> = ["--password=hunter2", "-phunter2", "--video-password=x", "-o", "%(title)s.%(ext)s"]
+            .map(String::from)
+            .to_vec();
+        assert_eq!(
+            redact_args(&glued, None),
+            ["--password=[redacted]", "-p[redacted]", "--video-password=[redacted]", "-o", "%(title)s.%(ext)s"]
         );
     }
 }

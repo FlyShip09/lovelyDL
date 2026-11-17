@@ -44,14 +44,15 @@ to it, so there are no shared locks, and tests drive it deterministically with f
 | `state` | The one table of legal job state transitions |
 | `engine` | The actor: scheduler, jobs, previews, settings, components, thumbnails |
 | `store` | SQLite (bundled rusqlite) on its own thread: jobs, FTS5 history search, migrations |
-| `settings` | Versioned JSON, sanitized on load, written atomically; a bad file is kept as `.json.bad` |
+| `settings` | Versioned JSON, sanitized on load, written atomically by one writer task; a bad file is kept as `.json.bad` |
 | `toolchain` | Find, install, verify (SHA-256), update, roll back and health-check yt-dlp, ffmpeg, Deno |
 | `ytdlp::args` | Pure argv builder, covered by golden tests |
 | `ytdlp::parse` | Sentinel-line parser |
 | `ytdlp::probe` | Probe, info-JSON cache, exact preset resolution |
 | `ytdlp::errors` | Classifier built from captured yt-dlp output (29 fixtures) |
 | `ytdlp::run` | Spawn in a Job Object, read both pipes, stop |
-| `redact` | Strips credentials, tokens and the home folder from logs and Copy details |
+| `redact` | Strips credentials, tokens and the home folder from every log line and Copy details |
+| `web` | The client for page-chosen addresses (thumbnails): public internet only, size-capped |
 
 Job states: `Queued → Probing → Downloading ⇄ PostProcessing → Completed`, plus `Paused`,
 `Failed` and `Canceled`. One table holds every job; History is the finished ones, and Clear

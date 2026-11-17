@@ -1,6 +1,6 @@
 // Pure functions that turn engine data into what rows and cards show. No React here.
 
-import type { Job, JobState, Preset, Resolved } from "../ipc";
+import type { Job, JobState, Preset, Resolved, Section } from "../ipc";
 import { errorCopy, s, stageLabel } from "../strings";
 
 const units = ["KB", "MB", "GB", "TB"];
@@ -83,18 +83,42 @@ export function resolvedSummary(r: Resolved): string {
   return parts.join(" · ");
 }
 
-export function resolvedSize(r: Resolved): string {
-  const size = formatBytes(r.bytes);
-  return size && (r.bytesApprox || !r.exact) ? `${s.approx}${size}` : size;
+/** "90", "1:30" or "1:02:03" in seconds; null when it is not a time. */
+export function seconds(value: string): number | null {
+  if (!/^\d+(:\d{1,2}){0,2}(\.\d+)?$/.test(value.trim())) return null;
+  return value
+    .trim()
+    .split(":")
+    .reduce((total, part) => total * 60 + Number(part), 0);
+}
+
+/** The download's size; with a time range, that range's share of the whole, as an estimate. */
+export function resolvedSize(r: Resolved, section?: Section | null, duration?: number | null): string {
+  let bytes = r.bytes;
+  let approx = r.bytesApprox || !r.exact;
+  if (bytes !== null && section && duration) {
+    const start = section.start.trim() ? seconds(section.start) : 0;
+    const end = section.end.trim() ? seconds(section.end) : duration;
+    if (start !== null && end !== null && end > start) {
+      bytes *= Math.min(1, (end - start) / duration);
+      approx = true;
+    }
+  }
+  const size = formatBytes(bytes);
+  return size && approx ? `${s.approx}${size}` : size;
 }
 
 /** A note when the preset gives less than the source has: "1080p in this format; the source has 2160p". */
-export function topsOutNote(preset: Preset, r: Resolved): string | null {
-  if (preset.kind === "audio" || r.height === null || r.sourceHeight === null) return null;
-  if (r.height >= r.sourceHeight) return null;
-  const cap = preset.maxHeight;
-  if (cap !== null && r.height >= Math.min(cap, r.sourceHeight)) return null;
-  return s.presetTopsOut(r.height, r.sourceHeight);
+// The best the source offers is measured within the cap: a 2.35:1 film at "480p" is 854×364,
+// and its next size up (544p) is over the cap, so 364p is not the format's fault.
+export function topsOutNote(preset: Preset, r: Resolved, heights: (number | null)[]): string | null {
+  if (preset.kind === "audio" || r.height === null) return null;
+  const cap = preset.maxHeight ?? Infinity;
+  const best = Math.max(
+    0,
+    ...[...heights, r.sourceHeight].filter((h): h is number => h !== null && h <= cap),
+  );
+  return r.height < best ? s.presetTopsOut(r.height, best) : null;
 }
 
 export function isActive(state: JobState): boolean {
@@ -196,4 +220,18 @@ export function thumbUrl(link: string): string | null {
   if (link.startsWith("data:")) return link;
   if (!link.startsWith("http")) return null;
   return `http://thumb.localhost/?u=${encodeURIComponent(link)}`;
+}
+
+/**
+ * A proxy address yt-dlp accepts: an optional scheme, optional user, a host name or IP, an
+ * optional port. A bare host:port means http. Checked by shape, because Chromium's URL parser
+ * accepts spaces in host names.
+ */
+export function validProxy(value: string): boolean {
+  return (
+    value === "" ||
+    /^(?:(?:https?|socks4a?|socks5h?):\/\/)?(?:[^@/\s]+@)?(?:[A-Za-z0-9.-]+|\[[0-9A-Fa-f:.]+\])(?::\d{1,5})?\/?$/.test(
+      value,
+    )
+  );
 }

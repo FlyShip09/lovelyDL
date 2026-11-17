@@ -104,6 +104,10 @@ async fn installs_verify_switch_atomically_and_roll_back() {
     assert!(first.is_file());
     assert_eq!(tc.rollback(ToolId::Ytdlp).await.unwrap(), first);
     assert_eq!(tc.managed(ToolId::Ytdlp), Some(first));
+    // The version rolled back from is held from automatic updates until something is installed.
+    assert_eq!(tc.skipped(ToolId::Ytdlp).as_deref(), Some("2026.11.30"));
+    tc.install(ToolId::Ytdlp, &release, |_| {}).await.unwrap();
+    assert_eq!(tc.skipped(ToolId::Ytdlp), None);
 
     // No leftovers from staging or downloading.
     let names: Vec<String> = std::fs::read_dir(tc.bin.join("yt-dlp"))

@@ -12,27 +12,25 @@ permissions:
 jobs:
   release:
     runs-on: windows-latest
-    env:
-      # Baked into the app so it can verify its own updates. Empty means "no updater".
-      LOVELYDL_UPDATER_PUBKEY: ${{ secrets.LOVELYDL_UPDATER_PUBKEY }}
-      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-      WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
-      WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+    # Secrets are given only to the step that uses them, never to `npm ci` (whose packages run
+    # install scripts) or to the third-party actions, which are pinned to commits.
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.100.0
-      - uses: Swatinem/rust-cache@v2
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: dtolnay/rust-toolchain@d5e4d57b030548f435d0befec15ff413a2c60eff # 1.100.0
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci
 
       - name: Import the code-signing certificate (only when the secrets exist)
-        if: env.WINDOWS_CERTIFICATE != '' && env.WINDOWS_CERTIFICATE_PASSWORD != ''
         shell: pwsh
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
         run: |
+          if (-not $env:WINDOWS_CERTIFICATE -or -not $env:WINDOWS_CERTIFICATE_PASSWORD) { exit 0 }
           $pfx = Join-Path $env:RUNNER_TEMP "lovelydl.pfx"
           [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
           $cert = Import-PfxCertificate -FilePath $pfx -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force)
@@ -41,10 +39,20 @@ jobs:
           $config = @{ bundle = @{ windows = @{ certificateThumbprint = $cert.Thumbprint; digestAlgorithm = "sha256"; timestampUrl = "http://timestamp.digicert.com" } } } | ConvertTo-Json -Depth 5
           Set-Content -Path src-tauri/tauri.signing.json -Value $config
 
+      # The interface is built here, without secrets; the next step only compiles and signs.
+      - name: Build the interface
+        run: npm run build
+
       - name: Build
         shell: pwsh
+        env:
+          # Baked into the app so it can verify its own updates. Empty means "no updater".
+          LOVELYDL_UPDATER_PUBKEY: ${{ secrets.LOVELYDL_UPDATER_PUBKEY }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
-          $configs = @()
+          Set-Content -Path src-tauri/tauri.prebuilt.json -Value '{ "build": { "beforeBuildCommand": "" } }'
+          $configs = @("--config", "src-tauri/tauri.prebuilt.json")
           if (Test-Path src-tauri/tauri.signing.json) { $configs += "--config"; $configs += "src-tauri/tauri.signing.json" }
           # Updater artifacts only when the updater key is available.
           if ($env:TAURI_SIGNING_PRIVATE_KEY) {

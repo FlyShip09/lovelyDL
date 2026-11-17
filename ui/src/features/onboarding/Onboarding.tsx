@@ -1,7 +1,7 @@
 // First run: welcome, choose the download folder, install the tools, done. Steps slide
 // sideways like a setup assistant; installs show real progress.
 
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useIsPresent, type HTMLMotionProps } from "motion/react";
 import { useState } from "react";
 
 import { Button } from "../../components/Button";
@@ -152,18 +152,27 @@ export function Onboarding() {
         </Button>
         {allReady ? (
           <Button variant="primary" large onClick={() => go(3)}>
-            Continue
+            {s.continueButton}
           </Button>
         ) : (
-          <Button variant="primary" large disabled={busy} onClick={() => void install()}>
-            {busy ? s.installing : s.install}
-          </Button>
+          <>
+            {/* Offline or rate-limited, the app must still open; Settings can install later. */}
+            {!busy && (
+              <Button variant="plain" large onClick={() => go(3)}>
+                {s.setUpLater}
+              </Button>
+            )}
+            <Button variant="primary" large disabled={busy} onClick={() => void install()}>
+              {busy ? s.installing : s.install}
+            </Button>
+          </>
         )}
       </div>
     </div>,
     <div key="done" className={styles.step}>
       <h1 className={styles.title}>{s.doneTitle}</h1>
       <p className={styles.lead}>{s.doneLead}</p>
+      {!allReady && <p className={styles.lead}>{s.toolsLater}</p>}
       <div className={styles.buttons}>
         <Button variant="primary" large data-autofocus onClick={() => void finish()}>
           {s.startUsing}
@@ -179,7 +188,7 @@ export function Onboarding() {
       </div>
       <div className={styles.stage}>
         <AnimatePresence mode="popLayout" initial={false} custom={direction}>
-          <motion.div
+          <Slide
             key={step}
             custom={direction}
             variants={{
@@ -194,7 +203,7 @@ export function Onboarding() {
             className={styles.slide}
           >
             {steps[step]}
-          </motion.div>
+          </Slide>
         </AnimatePresence>
       </div>
       <div className={styles.dots} aria-hidden>
@@ -204,4 +213,9 @@ export function Onboarding() {
       </div>
     </div>
   );
+}
+
+/** A step on its way out stays visible for its slide but takes no more clicks or focus. */
+function Slide(props: HTMLMotionProps<"div">) {
+  return <motion.div {...props} inert={!useIsPresent()} />;
 }

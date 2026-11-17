@@ -86,6 +86,8 @@ struct Shared {
     dirs: Dirs,
     store: Store,
     toolchain: Arc<Toolchain>,
+    /// For thumbnails: addresses a page chose, so public internet only.
+    web: reqwest::Client,
 }
 
 #[derive(Clone)]
@@ -110,6 +112,8 @@ struct Run {
     file: Option<String>,
     media: Option<(Box<MediaInfo>, String)>,
     saw_entries: bool,
+    /// yt-dlp found a finished file with this name and skipped the download.
+    name_taken: bool,
 }
 
 #[derive(Default)]
@@ -132,6 +136,8 @@ struct Core {
     sink: Sink,
     user_agent: String,
     settings: Settings,
+    /// Settings waiting to be written by the one writer task.
+    settings_out: tokio::sync::watch::Sender<Option<Settings>>,
     components: Components,
     tool_paths: HashMap<ToolId, PathBuf>,
     /// False while a health check is under way; nothing starts on stale tool state.
@@ -150,6 +156,8 @@ struct Core {
     probed: HashMap<JobId, Instant>,
     /// Jobs that already got their one re-probe after an HTTP 403.
     reprobed: HashSet<JobId>,
+    /// Jobs saving under a numbered name because the plain one was taken: id → number.
+    renamed: HashMap<JobId, u32>,
     logs: HashMap<JobId, JobLog>,
     preview: Option<Preview>,
     preview_run: Option<PreviewRun>,
@@ -276,14 +284,30 @@ impl Engine {
         if let Some(api) = config.api {
             toolchain.api = api;
         }
-        let shared = Arc::new(Shared { dirs, store, toolchain: Arc::new(toolchain) });
+        let web = crate::web::public_client(&config.user_agent);
+        let shared = Arc::new(Shared { dirs, store, toolchain: Arc::new(toolchain), web });
         let (tx, mut rx) = mpsc::unbounded_channel::<Call>();
+        let (settings_out, mut settings_in) = tokio::sync::watch::channel(None::<Settings>);
+        let settings_path = shared.dirs.data.join("settings.json");
+        tokio::spawn(async move {
+            // One writer that always takes the newest settings: saves never overlap, and an
+            // older copy can never land after a newer one.
+            while settings_in.changed().await.is_ok() {
+                let Some(latest) = settings_in.borrow_and_update().clone() else { continue };
+                let path = settings_path.clone();
+                let saved = tokio::task::spawn_blocking(move || settings::save(&path, &latest)).await;
+                if let Ok(Err(error)) = saved {
+                    tracing::error!(%error, "could not save settings");
+                }
+            }
+        });
         let mut core = Core {
             me: tx.clone(),
             shared: shared.clone(),
             sink: config.sink,
             user_agent: config.user_agent,
             settings: loaded,
+            settings_out,
             components: Components::default(),
             tool_paths: HashMap::new(),
             tools_known: false,
@@ -296,6 +320,7 @@ impl Engine {
             stopping: HashMap::new(),
             probed: HashMap::new(),
             reprobed: HashSet::new(),
+            renamed: HashMap::new(),
             logs: HashMap::new(),
             preview: None,
             preview_run: None,
@@ -459,7 +484,7 @@ impl Engine {
                 let i = core.index(&id).ok_or("That download is no longer in the list.")?;
                 let tools = core.tools().ok_or("yt-dlp is not installed yet.")?;
                 let args = args::probe_args(&core.jobs[i].url, PlaylistChoice::Video, &core.settings, &tools);
-                Ok((tools.ytdlp, args, core.info_path(&id)))
+                Ok((tools.ytdlp, args, core.cache_path(&id)))
             })
             .await?;
         let out = run::output(&ytdlp, &args, 120).await.map_err(|e| e.to_string())?;
@@ -471,7 +496,9 @@ impl Engine {
             let log: Vec<String> = out.stderr.lines().map(String::from).collect();
             return Err(classify(&log, out.code).detail);
         };
-        let _ = write_atomic(&info_path, raw.as_bytes()).await;
+        if let (Some(path), Some(raw)) = (info_path, probe::cacheable(&raw)) {
+            let _ = write_atomic(&path, raw.as_bytes()).await;
+        }
         Ok(*media)
     }
 
@@ -704,8 +731,8 @@ impl Engine {
     /// A thumbnail's bytes and media type, fetched once and cached. Only http(s) images.
     pub async fn thumbnail(&self, link: &str) -> Result<(Vec<u8>, &'static str), String> {
         let parsed = url::Url::parse(link).map_err(|e| e.to_string())?;
-        if !matches!(parsed.scheme(), "http" | "https") {
-            return Err("not a web address".into());
+        if !matches!(parsed.scheme(), "http" | "https") || !crate::web::public_host(&parsed) {
+            return Err("not a public web address".into());
         }
         let name: String = Sha256::digest(link.as_bytes()).iter().map(|b| format!("{b:02x}")).collect();
         let path = self.shared.dirs.cache.join("thumbs").join(name);
@@ -714,13 +741,20 @@ impl Engine {
         {
             return Ok((bytes, kind));
         }
-        let response = self.shared.toolchain.http.get(parsed).send().await.map_err(|e| e.without_url().to_string())?;
-        let response = response.error_for_status().map_err(|e| e.without_url().to_string())?;
+        let response = self.shared.web.get(parsed).send().await.map_err(|e| e.without_url().to_string())?;
+        let mut response = response.error_for_status().map_err(|e| e.without_url().to_string())?;
         if response.content_length().is_some_and(|n| n as usize > MAX_THUMBNAIL) {
             return Err("the image is too large".into());
         }
-        let bytes = response.bytes().await.map_err(|e| e.without_url().to_string())?.to_vec();
-        let kind = image_type(&bytes).filter(|_| bytes.len() <= MAX_THUMBNAIL).ok_or("not an image")?;
+        // Read in pieces, so a reply without a length cannot fill memory before the check.
+        let mut bytes = Vec::new();
+        while let Some(chunk) = response.chunk().await.map_err(|e| e.without_url().to_string())? {
+            if bytes.len() + chunk.len() > MAX_THUMBNAIL {
+                return Err("the image is too large".into());
+            }
+            bytes.extend_from_slice(&chunk);
+        }
+        let kind = image_type(&bytes).ok_or("not an image")?;
         let _ = write_atomic(&path, &bytes).await;
         Ok((bytes, kind))
     }
@@ -760,6 +794,12 @@ impl Core {
 
     fn info_path(&self, id: &str) -> PathBuf {
         self.shared.dirs.cache.join("probe").join(format!("{id}.json"))
+    }
+
+    /// Where to cache a probe, or `None` while browser cookies are in use: what a site sends
+    /// back for a signed-in session (auth headers, signed links) must not be written to disk.
+    fn cache_path(&self, id: &str) -> Option<PathBuf> {
+        self.settings.cookies_browser.is_empty().then(|| self.info_path(id))
     }
 
     // ----- changes ---------------------------------------------------------------------
@@ -949,7 +989,7 @@ impl Core {
     }
 
     fn template(&self, job: &Job) -> String {
-        let template = &self.settings.filename_template;
+        let template = numbered(&self.settings.filename_template, self.renamed.get(&job.id).copied());
         match &job.group {
             Some(group) if self.settings.playlist_index => {
                 let width = group.count.to_string().len().max(2);
@@ -960,7 +1000,7 @@ impl Core {
                     None => format!("{prefix}{template}"),
                 }
             }
-            _ => template.clone(),
+            _ => template,
         }
     }
 
@@ -1025,7 +1065,17 @@ impl Core {
             Ok(stop) => {
                 self.runs.insert(
                     id.to_string(),
-                    Run { seq, stop, phase, tracker, cached, file: None, media: None, saw_entries: false },
+                    Run {
+                        seq,
+                        stop,
+                        phase,
+                        tracker,
+                        cached,
+                        file: None,
+                        media: None,
+                        saw_entries: false,
+                        name_taken: false,
+                    },
                 );
             }
             Err(error) => {
@@ -1077,6 +1127,7 @@ impl Core {
                 }
             }
             Line::File(path) => run.file = Some(path),
+            Line::Existing => run.name_taken = true,
             Line::Log(text) => {
                 // With --wait-for-video, yt-dlp warns and waits instead of failing.
                 let lower = text.to_lowercase();
@@ -1121,6 +1172,12 @@ impl Core {
                 None => self.fail(id, classify(&log, code)),
             },
             Phase::Download => match (code, run.file) {
+                // Another file already has this name, and yt-dlp would hand back that old file
+                // (a 480p copy, a 30-second clip). Download again under a numbered name instead.
+                (Some(0), Some(_)) if run.name_taken && self.renamed.get(id).is_none_or(|n| *n < 99) => {
+                    *self.renamed.entry(id.to_string()).or_insert(1) += 1;
+                    self.transition(id, JobState::Queued);
+                }
                 (Some(0), Some(file)) => {
                     let (me, id) = (self.me.clone(), id.to_string());
                     tokio::spawn(async move {
@@ -1164,9 +1221,12 @@ impl Core {
             return self.fail(id, errors::error(ErrorKind::Drm, "This video is DRM protected"));
         }
         self.changed(i);
-        let (me, id, path) = (self.me.clone(), id.to_string(), self.info_path(id));
+        let (me, id, path) = (self.me.clone(), id.to_string(), self.cache_path(id));
         tokio::spawn(async move {
-            let cached = write_atomic(&path, raw.as_bytes()).await.is_ok();
+            let cached = match (path, probe::cacheable(&raw)) {
+                (Some(path), Some(raw)) => write_atomic(&path, raw.as_bytes()).await.is_ok(),
+                _ => false,
+            };
             let _ = me.send(Box::new(move |core| {
                 if cached {
                     core.probed.insert(id.clone(), Instant::now());
@@ -1559,10 +1619,13 @@ impl Core {
                 run.stop = None;
                 let resolved = probe::approx_resolve(&info, &preview.request);
                 preview.status = PreviewStatus::Ready { info, resolved };
-                let (me, id, path) = (self.me.clone(), id.to_string(), self.info_path(id));
+                let (me, id, path) = (self.me.clone(), id.to_string(), self.cache_path(id));
                 self.push_preview();
                 tokio::spawn(async move {
-                    let cached = write_atomic(&path, line.as_bytes()).await.is_ok();
+                    let cached = match (path, probe::cacheable(&line)) {
+                        (Some(path), Some(raw)) => write_atomic(&path, raw.as_bytes()).await.is_ok(),
+                        _ => false,
+                    };
                     let _ = me.send(Box::new(move |core| core.preview_cached(&id, cached)));
                 });
             }
@@ -1761,12 +1824,7 @@ impl Core {
     }
 
     fn save_settings(&mut self) {
-        let (path, copy) = (self.shared.dirs.data.join("settings.json"), self.settings.clone());
-        tokio::task::spawn_blocking(move || {
-            if let Err(error) = settings::save(&path, &copy) {
-                tracing::error!(%error, "could not save settings");
-            }
-        });
+        self.settings_out.send_replace(Some(self.settings.clone()));
         self.push(Change::Settings(Box::new(self.settings.clone())));
     }
 
@@ -1908,17 +1966,20 @@ impl Core {
             let mut newer = Vec::new();
             for (id, current) in managed {
                 match toolchain.latest(id, channel).await {
-                    Ok(release) if release.version != current => newer.push((id, release.version)),
+                    Ok(release) if release.version != current => {
+                        let held = toolchain.skipped(id).is_some_and(|v| v == release.version);
+                        newer.push((id, release.version, held));
+                    }
                     Ok(_) => {}
                     Err(error) => tracing::info!(tool = ?id, %error, "update check failed"),
                 }
             }
             let _ = me.send(Box::new(move |core| {
                 core.checking_updates = false;
-                for (id, version) in newer {
+                for (id, version, held) in newer {
                     core.components.tool_mut(id).latest = version;
-                    // Never swap a tool under a running download.
-                    if core.settings.auto_update_tools && core.runs.is_empty() {
+                    // Never swap a tool under a running download, or undo a rollback.
+                    if core.settings.auto_update_tools && core.runs.is_empty() && !held {
                         core.install(id, None);
                     }
                 }
@@ -2026,9 +2087,25 @@ impl Core {
     }
 }
 
+/// The template with " (n)" before the extension, for a name that is already taken.
+fn numbered(template: &str, n: Option<u32>) -> String {
+    let Some(n) = n else { return template.to_string() };
+    match template.strip_suffix(".%(ext)s") {
+        Some(stem) => format!("{stem} ({n}).%(ext)s"),
+        None => format!("{template} ({n})"),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_taken_name_gets_a_number_before_the_extension() {
+        assert_eq!(numbered("%(title)s [%(id)s].%(ext)s", None), "%(title)s [%(id)s].%(ext)s");
+        assert_eq!(numbered("%(title)s [%(id)s].%(ext)s", Some(2)), "%(title)s [%(id)s] (2).%(ext)s");
+        assert_eq!(numbered("%(uploader)s/%(title)s", Some(3)), "%(uploader)s/%(title)s (3)");
+    }
 
     #[test]
     fn links_are_found_in_messy_text() {

@@ -165,7 +165,8 @@ Choreography as built:
 4. **Progress.** The bar glides between updates and never moves back within a stage; speed
    and time left change at most twice a second; the thumbnail fills with color.
 5. **Completion.** A check draws in where the row's buttons were. The row stays with the
-   active ones for 1.8 s, then joins Completed — but not while the pointer is over the list.
+   active ones for 1.8 s, then joins Completed — but not while the pointer is moving over the
+   list (two seconds of stillness lets it settle).
 6. **Failure.** The status turns red and the explanation with its fix expands below.
 7. **Remove, Clear.** Rows collapse in height and fade, with a stagger capped at six rows.
 8. **Reorder.** A queued row lifts with a shadow and the others make way; drop to keep.

@@ -8,10 +8,12 @@ import {
   formatClock,
   groupJobs,
   resolvedSize,
+  seconds,
   resolvedSummary,
   rowLabel,
   statusLine,
   thumbUrl,
+  validProxy,
   topsOutNote,
 } from "./derive";
 
@@ -60,17 +62,30 @@ describe("what a preset produces", () => {
     expect(resolvedSummary(resolved({ fps: 60 }))).toBe("1080p60 · H.264 · AAC · MP4");
     expect(resolvedSize(resolved())).toBe("40.0 MB");
     expect(resolvedSize(resolved({ exact: false }))).toBe("~40.0 MB");
+    // 2:00–2:30 of a 14:48 film is about a thirtieth of it; open ends run to the edges.
+    expect(resolvedSize(resolved(), { start: "2:00", end: "2:30" }, 888)).toBe("~1.4 MB");
+    expect(resolvedSize(resolved(), { start: "", end: "444" }, 888)).toBe("~20.0 MB");
+    expect(resolvedSize(resolved(), { start: "nonsense", end: "" }, 888)).toBe("40.0 MB");
+    expect(seconds("1:02:03")).toBe(3723);
     expect(resolvedSize(resolved({ bytesApprox: true }))).toBe("~40.0 MB");
   });
 
   it("says when a preset tops out below the source", () => {
-    expect(topsOutNote({ kind: "mp4", maxHeight: null }, resolved())).toBe(
+    const heights = [2160, 1080, 720, null];
+    expect(topsOutNote({ kind: "mp4", maxHeight: null }, resolved(), heights)).toBe(
       "1080p in this format; the source has 2160p",
     );
     // Asking for 1080p and getting 1080p is not worth a note.
-    expect(topsOutNote({ kind: "mp4", maxHeight: 1080 }, resolved())).toBeNull();
-    expect(topsOutNote({ kind: "best", maxHeight: null }, resolved({ height: 2160 }))).toBeNull();
-    expect(topsOutNote({ kind: "audio", format: "mp3" }, resolved({ height: null }))).toBeNull();
+    expect(topsOutNote({ kind: "mp4", maxHeight: 1080 }, resolved(), heights)).toBeNull();
+    expect(topsOutNote({ kind: "best", maxHeight: null }, resolved({ height: 2160 }), heights)).toBeNull();
+    expect(topsOutNote({ kind: "audio", format: "mp3" }, resolved({ height: null }), heights)).toBeNull();
+    // A wide film: 364p is the best under a 480p cap, whatever the format (Sintel, real probe).
+    const wide = [364, 544, 818, 872];
+    const capped = resolved({ height: 364, sourceHeight: 872 });
+    expect(topsOutNote({ kind: "mp4", maxHeight: 480 }, capped, wide)).toBeNull();
+    expect(topsOutNote({ kind: "mp4", maxHeight: 720 }, capped, wide)).toBe(
+      "364p in this format; the source has 544p",
+    );
   });
 });
 
@@ -123,6 +138,26 @@ describe("rows", () => {
     });
     expect(rowLabel(failed)).toBe("A title, No connection");
     expect(statusLine(job({ state: "completed", fileMissing: true }))).toBe("File moved or deleted");
+  });
+
+  it("accepts proxy addresses yt-dlp can use, by their shape", () => {
+    for (const ok of [
+      "",
+      "127.0.0.1:8080",
+      "http://proxy.lan:3128",
+      "socks5://user:pw@10.0.0.1:1080",
+      "socks5h://[::1]:9050",
+    ])
+      expect(validProxy(ok), ok).toBe(true);
+    // Chromium's URL parser would accept "http://not a proxy"; this check does not.
+    for (const bad of [
+      "not a proxy",
+      "http://not a proxy",
+      "ftp://host:21",
+      "javascript:alert(1)",
+      "host:99999999",
+    ])
+      expect(validProxy(bad), bad).toBe(false);
   });
 
   it("serves thumbnails through the app, never straight from the internet", () => {

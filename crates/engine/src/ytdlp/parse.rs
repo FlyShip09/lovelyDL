@@ -14,12 +14,20 @@ pub const DOWNLOAD_TEMPLATE: &str = concat!(
 );
 pub const POSTPROCESS_TEMPLATE: &str = "postprocess:@@lovelydl@@PP %(progress)j";
 pub const FILE_TEMPLATE: &str = "after_move:@@lovelydl@@FILE %(filepath)j";
+/// `false` when yt-dlp handed back a file that already existed instead of downloading. Its own
+/// message for that is hidden by the quiet mode `--print` turns on.
+pub const REAL_TEMPLATE: &str = "after_move:@@lovelydl@@REAL %(__real_download)j";
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Line {
     Download(DlLine),
-    Post { name: String, started: bool },
+    Post {
+        name: String,
+        started: bool,
+    },
     File(String),
+    /// The file existed already, so nothing was downloaded.
+    Existing,
     Log(String),
 }
 
@@ -103,7 +111,8 @@ pub fn parse_line(line: &str) -> Line {
     } else if let Some(json) = rest.strip_prefix("FILE ") {
         serde_json::from_str::<String>(json).ok().map(Line::File)
     } else {
-        None
+        rest.strip_prefix("REAL ")
+            .map(|real| if real.trim() == "false" { Line::Existing } else { Line::Log(line.to_string()) })
     };
     // A sentinel line we cannot read is kept as log text rather than dropped.
     parsed.unwrap_or_else(|| Line::Log(line.to_string()))
@@ -278,6 +287,9 @@ mod tests {
             parse_line("@@lovelydl@@FILE \"C:\\\\out\\\\Caminandes 3\\uff1a Llamigos [x].mp4\"\r\n"),
             Line::File("C:\\out\\Caminandes 3\u{ff1a} Llamigos [x].mp4".into())
         );
+        // What yt-dlp 2026.10.26 prints for a skipped existing file, and for a real download.
+        assert_eq!(parse_line("@@lovelydl@@REAL false"), Line::Existing);
+        assert!(matches!(parse_line("@@lovelydl@@REAL true"), Line::Log(_)));
         for log in ["ERROR: [youtube] x: This video is unavailable", "@@lovelydl@@DL {broken", ""] {
             assert_eq!(parse_line(log), Line::Log(log.into()));
         }

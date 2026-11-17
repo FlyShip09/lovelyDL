@@ -457,3 +457,21 @@ async fn streamed_playlist_entries_are_never_counted_twice() {
     }
     assert_eq!(most, 17, "the mirror held more entries than the playlist has");
 }
+
+#[tokio::test]
+async fn quick_settings_changes_end_with_the_newest_on_disk() {
+    let h = ready(Setup::default()).await;
+    let path = h.root.join("data").join("settings.json");
+    for n in 1..=8u32 {
+        let settings = Settings { max_concurrent: n, ..h.settings.clone() };
+        h.engine.settings_set(settings).await.unwrap();
+    }
+    // One writer takes the newest copy each time, so the file settles on the last change.
+    for _ in 0..100 {
+        if engine::settings::load(&path).max_concurrent == 8 {
+            return;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+    }
+    panic!("settings.json never reached the newest value: {:?}", std::fs::read_to_string(&path));
+}

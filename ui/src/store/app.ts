@@ -165,10 +165,14 @@ export function apply(changes: Change[]) {
       case "order":
         order = change.data;
         break;
-      case "preview":
+      case "preview": {
         patch.preview = change.data;
+        const sheet = patch.sheet === undefined ? state.sheet : patch.sheet;
         if (change.data?.status.status === "playlist") patch.sheet = { kind: "playlist" };
+        // A new link replaced the playlist: its sheet would be left with nothing to show.
+        else if (sheet?.kind === "playlist") patch.sheet = null;
         break;
+      }
       case "playlistEntries": {
         const preview = patch.preview ?? state.preview;
         if (preview?.id === change.data.previewId && preview.status.status === "playlist") {

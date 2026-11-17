@@ -250,8 +250,79 @@ Not verified, and why:
 - **Signing and updater steps of the release workflow**: they need the owner's certificate
   and updater key as secrets.
 
+## M8 · Smoke tests, fresh install, review — done
+
+Fresh install: the release build with an empty `LOVELYDL_HOME`, driven through
+`scripts/smoke.mjs`. Onboarding ran start to finish: yt-dlp 2026.10.26 and Deno 2.9.8
+downloaded from GitHub with their SHA-256 sums matching. ffmpeg was taken from PATH, as
+designed, so the managed ffmpeg was then installed from Settings' command: 9.0.2 from
+GyanD/codexffmpeg, checksum matching, and a Compatible MP4 merge ran on it (H.264/AAC, 146 s).
+
+Live smoke tests in the real app (files checked with ffprobe):
+
+| Case | Result |
+|---|---|
+| MP4 | Caminandes 3, Compatible MP4 480p: preview 9.2 MB, file 9.3 MB, H.264/AAC with cover art, 150 s |
+| MP3 | Same video: file 4.9 MB, MP3 with cover art, 150 s |
+| Subtitles and time range | Sintel 2:00–2:30, English: 30.1 s file with an English `mov_text` track |
+| Another site | Internet Archive 1960 ad: converted to H.264/AAC, 59.6 s |
+| Playlist | Blender playlist, search "Caminandes", 2 picked, M4A: own folder, files `10 - …` and `13 - …` |
+
+Fixed from the live run (each with a test):
+
+- A finished row stayed under Active for as long as the pointer rested on the list. Rows now
+  hold their sections only while the pointer moves, and settle after two still seconds.
+- The MP3 preview showed the Opus source's size (~2.5 MB for a 4.9 MB file); it now
+  estimates from LAME V0's bitrate (~4.6 MB).
+- A time range previewed the whole film's size (48.9 MB for a 1.1 MB clip); it now shows
+  the range's share, marked approximate.
+- A wide film at a 480p cap said "364p in this format; the source has 872p", blaming the
+  format. The note now compares with the best height under the cap.
+- Compatible MP4 from a non-MP4 source (OGV) previewed as "OGV" with an exact-looking size;
+  it now says MP4 and marks the size approximate.
+- Embedded subtitles also left a `.vtt` file beside the video, because an explicit
+  `--write-subs` makes yt-dlp keep it. `--compat-options no-keep-subs` removes it once
+  embedded (checked in yt-dlp's source and with a real download).
+- The subtitles checkbox listed the available languages as if all would be downloaded; it
+  now says "available: …".
+- Sheets, onboarding steps and the preview card were still clickable while animating out;
+  they are inert from the moment they start leaving.
+
+Fresh-eyes review: a separate agent read the code against the brief (24 findings). Fixed,
+each with a test where it is logic: cookies could reach the probe cache; thumbnail fetches
+could reach the local network and had no streaming cap; a dropped file could replace the
+interface; a failed app update left downloads stopped; sign-in errors could not be retried
+after setting up cookies; select all/none in a filtered playlist changed hidden entries;
+Compatible MP4 at 1440p/2160p was VP9 in an MP4 box; an empty updater key counted as a key;
+settings saves could overlap; "Choose another folder" changed the default folder; onboarding
+could not be finished offline; a new link left the playlist sheet empty; History lost focus
+on long lists; reordering needed a mouse; a rollback was undone by the next daily check; the
+template example only updated after leaving the field; a proxy without `http://` was
+silently ignored; redaction missed `--password=x`, case-changed home paths and unscrubbed
+log lines; release secrets were visible to every step. Also found in the live run: a taken
+file name handed back the old file. Left as they are, with reasons: DECISIONS.md, "Left as
+they are".
+
+Checked again in the rebuilt release app after the fixes:
+
+| What | Result |
+|---|---|
+| Downloading a video whose file exists | Saved as `Caminandes 3： Llamigos [SkVqJ1SGeL0] (2).mp4`; the original untouched. yt-dlp's own "already downloaded" message is hidden by quiet mode, so the engine reads `%(__real_download)j` (checked: `True` for a download, `False` for a skip) |
+| Thumbnails through the public-only client | All rows show their i.ytimg.com thumbnails |
+| Proxy field | "not a proxy" refused with the message; "127.0.0.1:8080" saved as `http://127.0.0.1:8080`. First attempt failed: Chromium's `URL` accepts spaces in host names, so the check is now by shape (unit test) |
+| Template field | The example changed while typing, before leaving the field |
+| A dropped file | A real file drag through the DevTools drag pipeline: the page cancels it with the "not allowed" effect and no drop is delivered. WebView2's own file-open could not be reproduced in this harness (headless Chromium skips it too), so that part is by design, not observed |
+| README screenshot | `docs/screenshots/app/downloads-light.png`: real downloads at a temporary 400 KB/s limit, removed afterwards |
+
+Not verified, and why:
+
+- **Cookies from a browser** (still): no Chrome, Edge or Firefox profile on this PC; Brave's
+  needs the owner's OK. The cache stripping is unit-tested with planted cookies.
+- **A failed app update**: needs a signed release to fail against.
+- **Narrator itself, Acrylic, toasts, tray menu clicks, keep-awake**: as in M5 and M6.
+
 ## Next
 
-M8: full test suite and live smoke tests (MP4, MP3, subtitles, a non-YouTube site, a short
-playlist), a fresh-install run from empty folders, a fresh-eyes review against the brief,
-fixes, and the final report.
+Nothing planned. Open decisions for the owner are in the final report: code signing,
+updater keys, publishing the repository, and winget submission.
+

@@ -15,6 +15,7 @@ import type { OnAdd, ReleaseChannel, Settings, SponsorBlock, Tool } from "../../
 import { commands } from "../../ipc";
 import { snappy } from "../../motion/tokens";
 import { saveSettings, useApp, useConnection } from "../../store/app";
+import { validProxy } from "../../store/derive";
 import { s, sponsorCategoryLabel } from "../../strings";
 import { PresetControls } from "../downloads/PreviewCard";
 import styles from "./settings.module.css";
@@ -67,25 +68,47 @@ function Field({
   placeholder,
   wide,
   label,
+  error,
+  onInput,
 }: {
   value: string;
   onSave: (v: string) => void;
   placeholder?: string;
   wide?: boolean;
   label: string;
+  /** The message for a value that must not be saved, or null when it is fine. */
+  error?: (v: string) => string | null;
+  /** Called on every keystroke, for previews that follow the typing. */
+  onInput?: (v: string) => void;
 }) {
   // The caller keys this field by its value, so an outside change starts it fresh.
   const [text, setText] = useState(value);
+  const [problem, setProblem] = useState<string | null>(null);
   return (
-    <TextField
-      aria-label={label}
-      value={text}
-      placeholder={placeholder}
-      className={wide ? styles.wide : styles.medium}
-      onChange={(e) => setText(e.target.value)}
-      onBlur={() => text !== value && onSave(text)}
-      onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-    />
+    <>
+      <TextField
+        aria-label={label}
+        aria-invalid={problem !== null}
+        value={text}
+        placeholder={placeholder}
+        className={wide ? styles.wide : styles.medium}
+        onChange={(e) => {
+          setText(e.target.value);
+          onInput?.(e.target.value);
+        }}
+        onBlur={() => {
+          const found = error?.(text.trim()) ?? null;
+          setProblem(found);
+          if (!found && text !== value) onSave(text);
+        }}
+        onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+      />
+      {problem && (
+        <span className={styles.error} role="alert">
+          {problem}
+        </span>
+      )}
+    </>
   );
 }
 
@@ -170,10 +193,24 @@ function Formats({ st }: { st: Settings }) {
   const o = req.options;
   const setOptions = (patch: Partial<typeof o>) =>
     change({ defaultRequest: { ...req, options: { ...o, ...patch } } });
-  const [preview, setPreview] = useState("");
+  // The example follows the typing: each pause runs the template through yt-dlp once, and an
+  // answer that arrives after a newer keystroke is dropped.
+  const [draft, setDraft] = useState<string | null>(null);
+  const template = draft ?? st.filenameTemplate;
+  const [preview, setPreview] = useState({ template: "", ok: true, text: "" });
   useEffect(() => {
-    commands.templatePreview(st.filenameTemplate).then(setPreview, (e: unknown) => setPreview(String(e)));
-  }, [st.filenameTemplate]);
+    let live = true;
+    const timer = window.setTimeout(() => {
+      commands.templatePreview(template).then(
+        (text) => live && setPreview({ template, ok: true, text }),
+        (e: unknown) => live && setPreview({ template, ok: false, text: String(e) }),
+      );
+    }, 250);
+    return () => {
+      live = false;
+      window.clearTimeout(timer);
+    };
+  }, [template]);
   return (
     <>
       <Row label={s.defaultFormatRow}>
@@ -268,7 +305,7 @@ function Formats({ st }: { st: Settings }) {
         label={s.fileNamesRow}
         note={
           <>
-            {s.fileNameExample} <span className={`${styles.mono} selectable`}>{preview}</span>
+            {s.fileNameExample} <span className={`${styles.mono} selectable`}>{preview.text}</span>
           </>
         }
       >
@@ -277,7 +314,13 @@ function Formats({ st }: { st: Settings }) {
           label={s.fileNameTemplate}
           wide
           value={st.filenameTemplate}
-          onSave={(filenameTemplate) => change({ filenameTemplate })}
+          onInput={setDraft}
+          // A template yt-dlp just rejected is not saved; one not checked yet is.
+          error={(v) => (preview.template === v && !preview.ok ? s.templateNotSaved : null)}
+          onSave={(filenameTemplate) => {
+            setDraft(null);
+            change({ filenameTemplate });
+          }}
         />
       </Row>
       <Row label={s.playlistsRow}>
@@ -324,6 +367,7 @@ function Network({ st }: { st: Settings }) {
           wide
           value={st.proxy}
           placeholder={s.proxyNone}
+          error={(v) => (validProxy(v) ? null : s.proxyInvalid)}
           onSave={(proxy) => change({ proxy })}
         />
       </Row>

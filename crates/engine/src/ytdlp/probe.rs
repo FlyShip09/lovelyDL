@@ -120,7 +120,10 @@ pub fn parse_probe_line(line: &str) -> Option<Probed> {
     if v.get("formats").is_some_and(Value::is_array) || v.get("_type").and_then(Value::as_str) == Some("video") {
         return Some(Probed::Media(Box::new(media(&v))));
     }
-    let url = [text(&v, "url"), text(&v, "webpage_url")].into_iter().find(|u| u.starts_with("http"))?;
+    // Entry links come from the remote page: only real http(s) addresses become downloads.
+    let url = [text(&v, "url"), text(&v, "webpage_url")]
+        .into_iter()
+        .find(|u| url::Url::parse(u).is_ok_and(|p| matches!(p.scheme(), "http" | "https") && p.has_host()))?;
     let id = text(&v, "id");
     Some(Probed::Entry {
         // The key yt-dlp writes to its download archive: lower-cased extractor, then the id.
@@ -164,6 +167,27 @@ fn reencodes(preset: &Preset, acodec: &str) -> bool {
     }
 }
 
+/// The probe output as it may be cached: every `cookies` field and any `Cookie` header removed,
+/// so cookies yt-dlp read from a browser never reach the disk. `None` if it is not JSON.
+pub fn cacheable(raw: &str) -> Option<String> {
+    fn strip(v: &mut Value) {
+        match v {
+            Value::Object(map) => {
+                map.remove("cookies");
+                if let Some(Value::Object(headers)) = map.get_mut("http_headers") {
+                    headers.retain(|name, _| !name.eq_ignore_ascii_case("cookie"));
+                }
+                map.values_mut().for_each(strip);
+            }
+            Value::Array(items) => items.iter_mut().for_each(strip),
+            _ => {}
+        }
+    }
+    let mut v: Value = serde_json::from_str(raw.trim()).ok()?;
+    strip(&mut v);
+    serde_json::to_string(&v).ok()
+}
+
 /// Parses the line printed by [`RESOLVE_TEMPLATE`](crate::ytdlp::args::RESOLVE_TEMPLATE).
 pub fn parse_resolved(line: &str, req: &DownloadRequest, source_height: Option<u32>) -> Option<Resolved> {
     let v: Value = serde_json::from_str(line.trim()).ok()?;
@@ -181,6 +205,13 @@ pub fn parse_resolved(line: &str, req: &DownloadRequest, source_height: Option<u
     };
     let (vcodec, acodec) = (codec(top, "vcodec"), codec(top, "acodec"));
     let audio_only = vcodec.is_empty() || req.preset.is_audio();
+    // A re-encoded MP3 is LAME V0 (`--audio-quality 0`), about 245 kbit/s whatever the source.
+    let bytes = match (&req.preset, duration) {
+        (Preset::Audio { format: AudioFormat::Mp3 }, Some(seconds)) if reencodes(&req.preset, &acodec) => {
+            Some(seconds * 245_000.0 / 8.0)
+        }
+        _ => bytes,
+    };
     Some(Resolved {
         exact: true,
         format_ids: text(top, "format_id").split('+').filter(|s| !s.is_empty()).map(String::from).collect(),
@@ -188,10 +219,14 @@ pub fn parse_resolved(line: &str, req: &DownloadRequest, source_height: Option<u
         fps: if audio_only { None } else { num(top, "fps") },
         ext: match &req.preset {
             Preset::Audio { format } => format.ext().to_string(),
+            // Compatible MP4 re-encodes anything that is not MP4 already.
+            Preset::Mp4 { .. } => "mp4".to_string(),
             _ => text(top, "ext"),
         },
         bytes,
-        bytes_approx: approx || reencodes(&req.preset, &acodec),
+        bytes_approx: approx
+            || reencodes(&req.preset, &acodec)
+            || (matches!(req.preset, Preset::Mp4 { .. }) && text(top, "ext") != "mp4"),
         vcodec: if audio_only { String::new() } else { vcodec },
         acodec,
         source_height,
@@ -413,6 +448,21 @@ mod tests {
             .unwrap_or_else(|| panic!("unparsed"));
         assert_eq!((r.height, r.ext.as_str(), r.vcodec.as_str()), (None, "mp3", ""));
         assert!(r.bytes_approx, "mp3 from opus is re-encoded, so the size is a guess");
+        // Sized from the MP3 bitrate, not the Opus source: a real 150 s file came out at 4.9 MB.
+        assert_eq!(r.bytes, Some(150.0 * 245_000.0 / 8.0));
         assert!(parse_resolved("NA", &req(Preset::Best { max_height: None }), None).is_none());
+
+        // Cookies never reach the probe cache, wherever yt-dlp puts them.
+        let raw = r#"{"id":"x","cookies":"SID=1","formats":[{"format_id":"18","cookies":"SID=2; Domain=.google.com","http_headers":{"Cookie":"SID=3","User-Agent":"UA"}}],"requested_formats":[{"cookies":"SID=4"}]}"#;
+        let clean = cacheable(raw).unwrap_or_default();
+        assert!(!clean.contains("SID"), "{clean}");
+        assert!(clean.contains("\"User-Agent\":\"UA\"") && clean.contains("\"format_id\":\"18\""));
+        assert!(cacheable("not json").is_none());
+
+        // Compatible MP4 from an Internet Archive OGV: re-encoded, so MP4 and an estimate.
+        let line = r#"{"top":{"format_id": "1", "ext": "ogv", "vcodec": "theora", "acodec": "vorbis", "filesize": 4000000, "duration": 60},"parts":[]}"#;
+        let r =
+            parse_resolved(line, &req(Preset::Mp4 { max_height: None }), None).unwrap_or_else(|| panic!("unparsed"));
+        assert_eq!((r.ext.as_str(), r.bytes_approx), ("mp4", true));
     }
 }

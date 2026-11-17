@@ -31,6 +31,29 @@ test("dragging a queued row reorders the queue", async ({ page }) => {
   ]);
 });
 
+test("Alt+arrows reorder the queue from the keyboard", async ({ page }) => {
+  await page.goto("/?scenario=busy&frozen=1");
+  const queued = page.getByRole("rowgroup", { name: "Queued" });
+  await queued.getByRole("row").nth(1).click();
+  await page.keyboard.press("Alt+ArrowUp");
+  expect(await queuedTitles(page)).toEqual([
+    "Field recording: rain on a tin roof",
+    "Night train through the Alps in winter",
+  ]);
+});
+
+test("History keeps focus on the selected row while arrowing through it", async ({ page }) => {
+  await page.goto("/?scenario=history");
+  await page.getByRole("tab", { name: "History" }).click();
+  const grid = page.getByRole("grid", { name: "History" });
+  await grid.getByRole("row").first().click();
+  for (let i = 0; i < 5; i++) await page.keyboard.press("ArrowDown");
+  // Focus moves on the next frame, once the virtual list has rendered the row.
+  await expect
+    .poll(() => page.evaluate(() => document.activeElement?.getAttribute("aria-selected")))
+    .toBe("true");
+});
+
 test("Ctrl+V anywhere adds the link and Enter downloads it", async ({ page }) => {
   await page.goto("/?scenario=empty");
   await page.getByText("Nothing downloading").waitFor();
@@ -45,6 +68,15 @@ test("Ctrl+V anywhere adds the link and Enter downloads it", async ({ page }) =>
     page.getByRole("rowgroup", { name: "Active" }).or(page.getByRole("rowgroup", { name: "Queued" })),
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "Download", exact: true })).toHaveCount(0);
+});
+
+test("a preview card on its way out takes no second click", async ({ page }) => {
+  await page.goto("/?scenario=preview");
+  const card = page.locator("section[aria-label]").first();
+  await card.getByRole("button", { name: "Download", exact: true }).click();
+  // Still on screen for its exit animation, but inert, so a double-click cannot start it twice.
+  await expect(page.locator("section[inert]")).toHaveCount(1);
+  await expect(page.locator("section[aria-label]")).toHaveCount(0);
 });
 
 test("a link that is not a link says so", async ({ page }) => {
@@ -100,4 +132,14 @@ test("the playlist sheet selects ranges with shift-click", async ({ page }) => {
     .click({ modifiers: ["Shift"] });
   // Five rows, one of them already downloaded and skipped.
   await expect(sheet.getByRole("button", { name: "Download 4 videos" })).toBeEnabled();
+});
+
+test("select all with a search picks only the matches", async ({ page }) => {
+  await page.goto("/?scenario=playlist&frozen=1");
+  const sheet = page.getByRole("dialog");
+  await sheet.getByRole("button", { name: "Select none" }).click();
+  await sheet.getByRole("searchbox").fill("extended");
+  await sheet.getByRole("button", { name: "Select all" }).click();
+  await sheet.getByRole("searchbox").fill("");
+  await expect(sheet.getByRole("button", { name: "Download 8 videos" })).toBeEnabled();
 });

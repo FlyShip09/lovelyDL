@@ -253,3 +253,73 @@ All run with yt-dlp 2026.10.26 on this PC.
 - The brief says imported settings may never set custom yt-dlp arguments. There is no
   settings import, so nothing can; SECURITY.md does not claim the feature.
 
+
+## 2026-11-17 · Leaving elements are inert
+
+- Sheets, onboarding steps and the preview card stay on screen while they animate out. They
+  are now `inert` from the moment they start leaving (Motion's `useIsPresent`), so a
+  double-click cannot press Download twice and Tab cannot reach a step that is going away.
+  Found by the live smoke script, which saw two Continue buttons at once.
+
+## 2026-11-17 · Embedded subtitles leave no loose file
+
+- yt-dlp 2026.10.26 keeps a subtitle file after embedding when `--write-subs` was passed
+  explicitly (`already_have_subtitle` in `__init__.py`). We pass it so manual and automatic
+  captions can both be requested, so embedding also passes `--compat-options no-keep-subs`.
+  `--compat-options` adds to earlier values, so a user's own custom compat options still
+  apply.
+
+## 2026-11-17 · Rows settle when the pointer rests
+
+- Rows hold their sections while the pointer moves over the list (so nothing jumps under a
+  click) and settle after two seconds without movement. Holding until the pointer left kept
+  a finished download under Active indefinitely when the pointer simply rested there.
+
+## 2026-11-17 · Size estimates follow what will be written
+
+- Re-encoded MP3 is sized from LAME V0 (~245 kbit/s), not the source stream. A time range
+  scales the size by its share of the duration. Compatible MP4 from a non-MP4 source shows
+  MP4 and an approximate size. All are marked with "~".
+
+## 2026-11-17 · Correction: Compatible MP4 ranks H.264 above the cap
+
+- The earlier entry put a bare `-S res:H` after `-t mp4`. A later `-S` is prepended, so the
+  cap outranked `vcodec:h264` and 1440p/2160p picked VP9 or AV1 (checked: Big Buck Bunny 4K
+  gave `315+258 vp9 2160` inside an .mp4). The cap is now `-S vcodec:h264,res:H,acodec:aac`:
+  the same video gives H.264 1080p, and the preview says the source has 2160p.
+
+## 2026-11-17 · A taken file name gets a number
+
+- yt-dlp skips a download whose final file exists ("has already been downloaded") and the
+  job would complete with the old file: a 480p copy when 1080p was asked for, or a 30-second
+  clip when the whole film was. The engine notices that line and downloads again as
+  "Title [id] (2).ext", like a browser. Nothing is ever overwritten.
+
+## 2026-11-17 · Fixes from the fresh-eyes review
+
+- Probe output is cached without `cookies` fields, and not at all while browser cookies are
+  on (auth headers derived from a session are secrets too).
+- Thumbnails use a separate client that resolves only public addresses (`web.rs`), follows
+  redirects only to public hosts, and stops reading at 8 MB.
+- Every log line passes through redaction (a wrapping writer), not only the fields that were
+  cleaned by hand; `--password=x` and `-px` forms are redacted too.
+- A dropped file is refused by the page (`dragover`/`drop` prevented, "not allowed" cursor),
+  because WebView2 otherwise opens it in place of the app.
+- App updates are downloaded and signature-checked before the engine stops; an empty
+  `LOVELYDL_UPDATER_PUBKEY` counts as no key.
+- Settings are written by one task that always takes the newest copy.
+- Sign-in and cookie errors are retryable, "Choose another folder" changes only that
+  download, onboarding can be finished without the tools, a rollback holds that version from
+  automatic updates, the template example follows the typing, the proxy field refuses what
+  yt-dlp could not use, and queued rows move with Alt+↑/↓.
+- Release secrets are scoped to the steps that use them, the interface is built in a step
+  without them, and third-party actions are pinned to commits.
+
+## 2026-11-17 · Left as they are
+
+- Playlists and several links at once use the default folder and options; only a single
+  video's preview has the Options sheet. Folder and options per playlist would need the
+  Options sheet inside the playlist sheet.
+- "Video or whole playlist?" is asked only for YouTube links carrying both `v` and `list`.
+- The download archive is written for playlist items started with "skip already
+  downloaded" on, not for single videos.

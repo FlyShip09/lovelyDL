@@ -8,6 +8,7 @@ pub mod settings;
 pub mod state;
 pub mod store;
 pub mod toolchain;
+pub mod web;
 pub mod ytdlp;
 
 pub use engine::{Config, Dirs, Engine, EngineError, Sink};

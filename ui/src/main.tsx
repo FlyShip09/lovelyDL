@@ -20,6 +20,17 @@ async function start() {
     if (!target?.closest("input, textarea, [contenteditable], .selectable")) e.preventDefault();
   });
 
+  // Left alone, WebView2 opens a dropped file in place of the app. Every drag stops here;
+  // anything that is not a link gets the "not allowed" cursor and no drop at all.
+  document.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    const types = e.dataTransfer?.types ?? [];
+    if (e.dataTransfer && !types.includes("text/uri-list") && !types.includes("text/plain")) {
+      e.dataTransfer.dropEffect = "none";
+    }
+  });
+  document.addEventListener("drop", (e) => e.preventDefault());
+
   const view = info.view === "settings" ? "settings" : "main";
   const { App } =
     view === "settings" ? await import("./features/settings/SettingsApp") : await import("./App");

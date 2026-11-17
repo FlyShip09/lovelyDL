@@ -387,7 +387,10 @@ pub async fn open_link(app: AppHandle, state: State<'_, AppState>, link: Link) -
 #[specta::specta]
 pub async fn app_update_check(app: AppHandle, state: State<'_, AppState>) -> Res<Option<String>> {
     use tauri_plugin_updater::UpdaterExt;
-    let Some(key) = crate::UPDATER_PUBKEY else { return Err(strings::NO_UPDATER.into()) };
+    // CI sets the variable to "" when the secret is missing, which counts as no key.
+    let Some(key) = crate::UPDATER_PUBKEY.filter(|k| !k.trim().is_empty()) else {
+        return Err(strings::NO_UPDATER.into());
+    };
     let endpoint = url::Url::parse(crate::UPDATER_ENDPOINT).map_err(|e| e.to_string())?;
     let updater = app
         .updater_builder()
@@ -409,9 +412,16 @@ pub async fn app_update_check(app: AppHandle, state: State<'_, AppState>) -> Res
 #[specta::specta]
 pub async fn app_update_install(app: AppHandle, state: State<'_, AppState>) -> Res<()> {
     let update = state.update.lock().ok().and_then(|mut p| p.take()).ok_or("Check for updates first.")?;
+    // Download and check the signature while everything keeps running, so a failure here
+    // leaves the app as it was.
+    let bytes = update.download(|_, _| {}, || {}).await.map_err(|e| e.to_string())?;
+    update.verify(&bytes).map_err(|e| e.to_string())?;
     // Downloads stop and resume after the restart, like a normal quit.
     state.engine.shutdown().await;
-    update.download_and_install(|_, _| {}, || {}).await.map_err(|e| e.to_string())?;
+    if let Err(error) = update.install(&bytes) {
+        // The engine is already stopped; restarting brings the current version back up.
+        tracing::error!(%error, "could not install the update");
+    }
     app.restart();
 }
 

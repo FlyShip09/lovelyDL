@@ -121,7 +121,25 @@ fn write_bindings(builder: &tauri_specta::Builder<Wry>) -> Result<(), String> {
     builder.export(ts, BINDINGS).map_err(|e| e.to_string())
 }
 
-fn init_logging(dir: &std::path::Path) {
+/// Every log line passes through redaction, so a path or token logged anywhere comes out clean.
+struct Redacting<W> {
+    inner: W,
+    home: Option<String>,
+}
+
+impl<W: std::io::Write> std::io::Write for Redacting<W> {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        let text = String::from_utf8_lossy(buf);
+        self.inner.write_all(engine::redact::redact(&text, self.home.as_deref()).as_bytes())?;
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        self.inner.flush()
+    }
+}
+
+fn init_logging(dir: &std::path::Path, home: Option<std::path::PathBuf>) {
     use tracing_appender::rolling::{RollingFileAppender, Rotation};
     // The appender reads the folder to prune old files, so it has to exist first.
     let _ = std::fs::create_dir_all(dir);
@@ -136,7 +154,9 @@ fn init_logging(dir: &std::path::Path) {
     let _ = LOG_GUARD.set(guard);
     let filter = tracing_subscriber::EnvFilter::try_from_env("LOVELYDL_LOG")
         .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info"));
-    let _ = tracing_subscriber::fmt().with_writer(writer).with_ansi(false).with_env_filter(filter).try_init();
+    let home = home.map(|h| h.to_string_lossy().into_owned());
+    let make = move || Redacting { inner: writer.clone(), home: home.clone() };
+    let _ = tracing_subscriber::fmt().with_writer(make).with_ansi(false).with_env_filter(filter).try_init();
 }
 
 /// Opens a link that arrived from outside: `lovelydl://download?url=…&preset=…`, or a plain
@@ -256,7 +276,10 @@ fn setup(app: &mut tauri::App, specta: &tauri_specta::Builder<Wry>) -> anyhow::R
     // `LOVELYDL_HOME` keeps every folder under one path: for tests and fresh-install runs that
     // must not touch the real settings, tools or Downloads folder.
     let test_home = std::env::var_os("LOVELYDL_HOME").map(std::path::PathBuf::from);
-    init_logging(&test_home.as_ref().map_or_else(|| paths.app_log_dir(), |h| Ok(h.join("logs")))?);
+    init_logging(
+        &test_home.as_ref().map_or_else(|| paths.app_log_dir(), |h| Ok(h.join("logs")))?,
+        paths.home_dir().ok(),
+    );
     tracing::info!(version = env!("CARGO_PKG_VERSION"), build = os_build(), "lovelyDL starting");
     let dirs = match &test_home {
         Some(root) => Dirs { home: paths.home_dir().ok(), ..Dirs::under(root) },

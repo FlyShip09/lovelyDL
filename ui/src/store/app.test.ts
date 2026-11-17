@@ -69,6 +69,16 @@ describe("applying changes from Rust", () => {
     apply([{ type: "playlistEntries", data: { previewId: "p", entries: [{ ...entry, id: "e2" }] } }]);
     const status = useApp.getState().preview?.status;
     expect(status?.status === "playlist" && status.entries.map((e) => e.id)).toEqual(["e1", "e2"]);
+
+    // Another link dropped while the sheet is open replaces the playlist: the sheet closes
+    // instead of staying open with nothing in it.
+    apply([
+      {
+        type: "preview",
+        data: { id: "q", url: "https://x.test/v", source: "drop", request, status: { status: "probing" } },
+      },
+    ]);
+    expect(useApp.getState().sheet).toBeNull();
   });
 
   it("announces finished downloads to screen readers", () => {

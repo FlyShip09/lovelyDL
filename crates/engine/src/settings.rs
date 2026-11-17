@@ -40,6 +40,10 @@ pub fn sanitize(mut s: Settings) -> Settings {
     }
     s.rate_limit = s.rate_limit.trim().to_string();
     s.proxy = s.proxy.trim().to_string();
+    // "127.0.0.1:8080" means an http proxy; without the scheme yt-dlp would never get it.
+    if !s.proxy.is_empty() && !s.proxy.contains("://") {
+        s.proxy = format!("http://{}", s.proxy);
+    }
     s
 }
 
@@ -78,6 +82,15 @@ mod tests {
         assert_eq!(got.filename_template, DEFAULT_TEMPLATE);
         assert_eq!(got.proxy, "http://127.0.0.1:8080");
         assert!(!path.with_extension("json.tmp").exists());
+    }
+
+    #[test]
+    fn a_bare_proxy_address_means_http() {
+        let s = sanitize(Settings { proxy: " 127.0.0.1:8080 ".into(), ..Settings::default() });
+        assert_eq!(s.proxy, "http://127.0.0.1:8080");
+        assert!(crate::ytdlp::args::is_proxy(&s.proxy));
+        let s = sanitize(Settings { proxy: "socks5://h:1080".into(), ..Settings::default() });
+        assert_eq!(s.proxy, "socks5://h:1080");
     }
 
     #[test]

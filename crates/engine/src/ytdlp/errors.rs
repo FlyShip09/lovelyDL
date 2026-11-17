@@ -80,7 +80,8 @@ const BREAKAGE: [&str; 3] = ["unable to extract", "please report this issue", "c
 
 fn fix_for(kind: ErrorKind) -> (Option<Fix>, bool) {
     match kind {
-        SignIn | AgeRestricted | Private | MembersOnly | Cookies => (Some(Fix::UseCookies), false),
+        // Retryable: once cookies are set up, the same download can succeed.
+        SignIn | AgeRestricted | Private | MembersOnly | Cookies => (Some(Fix::UseCookies), true),
         FormatUnavailable => (Some(Fix::ChooseFormat), false),
         Http403 => (Some(Fix::UpdateYtdlp), true),
         JsRuntime | FfmpegMissing | YtdlpMissing => (Some(Fix::InstallComponents), true),
@@ -176,6 +177,9 @@ mod tests {
         let e =
             classify(&["ERROR: [youtube] x: Requested format is not available. Use --list-formats".into()], Some(1));
         assert_eq!((e.fix, e.retryable), (Some(Fix::ChooseFormat), false));
+        // After setting up cookies the user retries the same download.
+        let e = error(SignIn, "Sign in to confirm your age");
+        assert_eq!((e.fix, e.retryable), (Some(Fix::UseCookies), true));
         let e = classify(
             &["ERROR: [youtube] x: Unable to extract player response; please report this issue".into()],
             Some(1),

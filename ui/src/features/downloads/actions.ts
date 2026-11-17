@@ -3,7 +3,7 @@
 import type { MenuItem } from "../../components/Menu";
 import type { Job } from "../../ipc";
 import { commands } from "../../ipc";
-import { openSheet, saveSettings, useApp } from "../../store/app";
+import { openSheet, useApp } from "../../store/app";
 import { isActive } from "../../store/derive";
 import { fixLabel, s } from "../../strings";
 
@@ -24,12 +24,12 @@ export async function applyFix(job: Job) {
       openSheet({ kind: "formats", jobId: job.id });
       return;
     case "chooseFolder": {
-      const current = useApp.getState().settings?.downloadDir ?? "";
+      // Changes where this download goes and tries again; the default folder stays as it is.
+      const current = job.request.destination ?? useApp.getState().settings?.downloadDir ?? "";
       const folder = await commands.chooseFolder(current);
       if (!folder) return;
       await commands.checkFolder(folder);
-      await saveSettings((st) => ({ ...st, downloadDir: folder }));
-      await commands.jobRetry(job.id);
+      await commands.jobUpdateRequest(job.id, { ...job.request, destination: folder });
       return;
     }
     default:

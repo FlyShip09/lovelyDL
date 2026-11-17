@@ -150,6 +150,14 @@ export function HistoryView() {
                 if (next) {
                   setSelected(next.id);
                   virtual.scrollToIndex(items.indexOf(next));
+                  // Focus follows the selection, once the row is rendered, so it never falls out
+                  // of the virtual list and keys keep working.
+                  const focus = (tries: number) => {
+                    const row = scroll.current?.querySelector<HTMLElement>(`[data-history="${next.id}"]`);
+                    if (row) row.focus({ preventScroll: true });
+                    else if (tries > 0) requestAnimationFrame(() => focus(tries - 1));
+                  };
+                  requestAnimationFrame(() => focus(3));
                 }
               } else if (e.key === "Enter" && selected) void commands.openFile(selected);
               else if (e.key === "Delete" && selected)
@@ -173,6 +181,7 @@ export function HistoryView() {
                   role="row"
                   aria-selected={selected === job.id}
                   tabIndex={selected === job.id || (!selected && row.index === 0) ? 0 : -1}
+                  data-history={job.id}
                   className={rowStyles.row}
                   style={{
                     position: "absolute",

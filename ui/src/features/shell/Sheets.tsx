@@ -40,6 +40,7 @@ const shortcuts: [string, string][] = [
   ["Enter", s.shortcutDownloadPreview],
   ["Space", s.shortcutPauseResume],
   ["Delete", s.shortcutRemove],
+  ["Alt+↑, Alt+↓", s.shortcutMoveQueued],
   ["Ctrl+A", s.shortcutSelectAll],
   ["Ctrl+1, 2, 3", s.shortcutSections],
   ["Ctrl+F", s.searchHistory],
@@ -217,7 +218,14 @@ function PlaylistSheet() {
         />
         <Button
           variant="plain"
-          onClick={() => setDeselected(allOn ? new Set(shown.map((e) => e.id)) : new Set())}
+          onClick={() =>
+            // Only the entries shown (a search's matches) change; hidden ones keep their state.
+            setDeselected((prev) => {
+              const next = new Set(prev);
+              shown.forEach((e) => (allOn ? next.add(e.id) : next.delete(e.id)));
+              return next;
+            })
+          }
         >
           {allOn ? s.selectNone : s.selectAll}
         </Button>

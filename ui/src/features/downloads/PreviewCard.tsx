@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { AnimatePresence, motion, useIsPresent } from "motion/react";
+import { type Ref, useEffect, useState } from "react";
 
 import { Button, IconButton } from "../../components/Button";
 import { type Choice, PopUpButton, Spinner } from "../../components/controls";
@@ -95,7 +95,11 @@ function Flags({ info }: { info: MediaInfo }) {
 }
 
 function Ready({ preview, info, resolved }: { preview: Preview; info: MediaInfo; resolved: Resolved }) {
-  const note = topsOutNote(preview.request.preset, resolved);
+  const note = topsOutNote(
+    preview.request.preset,
+    resolved,
+    info.formats.map((f) => f.height),
+  );
   const kind = preview.request.preset.kind === "audio" ? "audio" : "video";
   return (
     <>
@@ -138,14 +142,14 @@ function Ready({ preview, info, resolved }: { preview: Preview; info: MediaInfo;
           <span className={styles.spacer} />
           <AnimatePresence mode="wait" initial={false}>
             <motion.span
-              key={resolvedSize(resolved)}
+              key={resolvedSize(resolved, preview.request.options.section, info.duration)}
               className={styles.size}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={fade}
             >
-              {resolvedSize(resolved)}
+              {resolvedSize(resolved, preview.request.options.section, info.duration)}
             </motion.span>
           </AnimatePresence>
           <Button variant="primary" data-autofocus onClick={() => void startPreview()}>
@@ -244,21 +248,29 @@ export function PreviewCard() {
   return (
     // popLayout: a card on its way out stops taking space at once, so the list below glides up.
     <AnimatePresence mode="popLayout" initial={false}>
-      {visible && (
-        <motion.section
-          key={preview.id}
-          layout="position"
-          aria-label={preview.status.status === "ready" ? preview.status.info.title : s.gettingDetails}
-          className={styles.card}
-          initial={{ opacity: 0, y: -14, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 24, scale: 0.97, transition: { duration: 0.22 } }}
-          // A link still being read waits 300 ms before its card shows, so fast answers never flicker.
-          transition={{ ...gentle, delay: preview.status.status === "probing" ? 0.3 : 0 }}
-        >
-          <Body preview={preview} />
-        </motion.section>
-      )}
+      {visible && <Card key={preview.id} preview={preview} />}
     </AnimatePresence>
+  );
+}
+
+/** `ref` comes from AnimatePresence's popLayout, which measures the card as it leaves. */
+function Card({ preview, ref }: { preview: Preview; ref?: Ref<HTMLElement> }) {
+  // On its way out the card stays visible but takes no more clicks, so Download cannot fire twice.
+  const present = useIsPresent();
+  return (
+    <motion.section
+      ref={ref}
+      inert={!present}
+      layout="position"
+      aria-label={preview.status.status === "ready" ? preview.status.info.title : s.gettingDetails}
+      className={styles.card}
+      initial={{ opacity: 0, y: -14, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 24, scale: 0.97, transition: { duration: 0.22 } }}
+      // A link still being read waits 300 ms before its card shows, so fast answers never flicker.
+      transition={{ ...gentle, delay: preview.status.status === "probing" ? 0.3 : 0 }}
+    >
+      <Body preview={preview} />
+    </motion.section>
   );
 }

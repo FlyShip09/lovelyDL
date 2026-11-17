@@ -319,10 +319,20 @@ impl Toolchain {
             let _ = tokio::fs::remove_dir_all(&target).await;
             return Err(ToolError::Unhealthy(reason));
         }
-        tokio::task::spawn_blocking(move || switch(&dir, &version))
-            .await
-            .map_err(|e| ToolError::Io(e.to_string()))??;
+        tokio::task::spawn_blocking(move || {
+            switch(&dir, &version)?;
+            // Installing anything ends a rollback's hold.
+            let _ = std::fs::remove_file(dir.join("skip"));
+            Ok::<_, ToolError>(())
+        })
+        .await
+        .map_err(|e| ToolError::Io(e.to_string()))??;
         Ok(binary)
+    }
+
+    /// The version a rollback stepped away from, which automatic updates leave alone.
+    pub fn skipped(&self, id: ToolId) -> Option<String> {
+        std::fs::read_to_string(self.dir(id).join("skip")).ok().map(|v| v.trim().to_string())
     }
 
     /// Goes back to the version that was in use before the current one.
@@ -335,7 +345,12 @@ impl Toolchain {
             if !binary.is_file() {
                 return Err(ToolError::NoPrevious);
             }
+            let left = std::fs::read_to_string(dir.join("current")).ok();
             switch(&dir, &previous)?;
+            // Remember what was rolled back, so the daily check does not reinstall it.
+            if let Some(left) = left {
+                std::fs::write(dir.join("skip"), left.trim())?;
+            }
             Ok(binary)
         })
         .await

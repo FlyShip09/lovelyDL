@@ -1,6 +1,6 @@
 // Window chrome: the traffic lights, sheets and banners.
 
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useIsPresent } from "motion/react";
 import type { ReactNode } from "react";
 import { useEffect, useId, useRef } from "react";
 
@@ -72,6 +72,8 @@ export function Sheet({ open, onClose, label, wide, children }: SheetProps) {
 function SheetBody({ onClose, label, wide, children }: Omit<SheetProps, "open">) {
   const ref = useRef<HTMLDivElement>(null);
   const id = useId();
+  // On its way out the sheet stays visible for its animation but takes no more clicks or focus.
+  const present = useIsPresent();
   useEffect(() => {
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const first =
@@ -81,7 +83,7 @@ function SheetBody({ onClose, label, wide, children }: Omit<SheetProps, "open">)
     return () => previous?.focus({ preventScroll: true });
   }, []);
   return (
-    <div className={styles.sheetLayer}>
+    <div className={styles.sheetLayer} inert={!present}>
       <motion.div
         className={styles.scrim}
         initial={{ opacity: 0 }}

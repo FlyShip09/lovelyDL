@@ -57,6 +57,18 @@ export function DownloadsView({ failedOnly }: { failedOnly: boolean }) {
   const place = (job: Job): SectionId =>
     frozen?.get(job.id) ?? (justCompleted.includes(job.id) ? "active" : sectionOf(job.state));
   const all = arrange(order, jobs, place);
+  // Rows keep their sections while the pointer moves over the list, so nothing jumps under a
+  // click. Two seconds of stillness, or leaving the list, lets them settle.
+  const idle = useRef(0);
+  const hold = () => {
+    setFrozen((f) => f ?? new Map(all.flatMap((x) => x.jobs.map((j): [string, SectionId] => [j.id, x.id]))));
+    window.clearTimeout(idle.current);
+    idle.current = window.setTimeout(() => setFrozen(null), 2000);
+  };
+  const release = () => {
+    window.clearTimeout(idle.current);
+    setFrozen(null);
+  };
   const sections = failedOnly ? all.filter((x) => x.id === "failed") : all;
   const flat = useMemo(() => sections.flatMap((x) => x.jobs.map((j) => j.id)), [sections]);
 
@@ -124,7 +136,22 @@ export function DownloadsView({ failedOnly }: { failedOnly: boolean }) {
       select([id]);
       list.current?.querySelector<HTMLElement>(`[data-job="${id}"]`)?.focus();
     };
-    if (e.key === "ArrowDown") move(index + 1);
+    if (e.altKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+      // The keyboard's way to reorder: Alt+arrows move a queued download one place.
+      const queued = all.find((x) => x.id === "queued")?.jobs.map((j) => j.id) ?? [];
+      const at = current ? queued.indexOf(current) : -1;
+      const to = at + (e.key === "ArrowUp" ? -1 : 1);
+      const other = queued[to];
+      if (current && at >= 0 && other) {
+        const next = [...queued];
+        next[at] = other;
+        next[to] = current;
+        let i = 0;
+        const whole = order.map((id) => (queued.includes(id) ? (next[i++] ?? id) : id));
+        useApp.setState({ order: whole });
+        void commands.jobsReorder(whole);
+      }
+    } else if (e.key === "ArrowDown") move(index + 1);
     else if (e.key === "ArrowUp") move(index - 1);
     else if (e.key === "Home") move(0);
     else if (e.key === "End") move(flat.length - 1);
@@ -175,10 +202,9 @@ export function DownloadsView({ failedOnly }: { failedOnly: boolean }) {
           aria-multiselectable
           aria-label={failedOnly ? s.failed : s.downloads}
           className={styles.list}
-          onPointerEnter={() =>
-            setFrozen(new Map(all.flatMap((x) => x.jobs.map((j): [string, SectionId] => [j.id, x.id]))))
-          }
-          onPointerLeave={() => setFrozen(null)}
+          onPointerEnter={hold}
+          onPointerMove={hold}
+          onPointerLeave={release}
           onKeyDown={onKeyDown}
           onFocus={(e) => {
             if (e.target === e.currentTarget && flat[0] && selection.length === 0) select([flat[0]]);

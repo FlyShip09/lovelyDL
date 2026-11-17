@@ -26,7 +26,12 @@ available.
   the published SHA-256 sums before use. App updates are verified against the release
   signing key built into the app.
 - Browser cookies are read by yt-dlp at download time. lovelyDL never copies, stores or logs
-  them. Logs and Copy details redact credentials, tokens and the home folder.
+  them: `cookies` fields are stripped from yt-dlp's output before anything is cached, and
+  while browser cookies are in use nothing from a probe is cached at all. Every log line and
+  Copy details redact credentials, tokens and the home folder.
+- Thumbnail addresses come from the pages themselves, so they may only reach the public
+  internet (never this PC or the local network, also not through DNS or a redirect), and are
+  read with an 8 MB cap.
 - The web view has a strict Content Security Policy and may call only the app's own
   commands; it never loads remote images or scripts.
 - No telemetry, analytics, accounts or remote configuration.

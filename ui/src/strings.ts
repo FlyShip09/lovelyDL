@@ -163,6 +163,7 @@ export const s = {
   shortcutAddCopied: "Add the copied link",
   shortcutDownloadPreview: "Download the previewed link",
   shortcutPauseResume: "Pause or resume the selected downloads",
+  shortcutMoveQueued: "Move a waiting download up or down the queue",
   shortcutRemove: "Remove the selected downloads",
   shortcutSelectAll: "Select all downloads",
   shortcutSections: "Downloads, History, Failed",
@@ -191,7 +192,7 @@ export const s = {
   // Subtitles and sponsor segments (Options sheet and Settings)
   subtitlesRow: "Subtitles:",
   downloadSubtitles: "Download subtitles",
-  downloadSubtitlesWith: (languages: string) => `Download subtitles (${languages})`,
+  downloadSubtitlesWith: (languages: string) => `Download subtitles (available: ${languages})`,
   languages: "Languages",
   subtitleLanguages: "Subtitle languages",
   autoCaptions: "Include auto-generated captions",
@@ -236,6 +237,8 @@ export const s = {
   doneTitle: "You're set",
   doneLead: "Copy a link in your browser, come back, and press Ctrl+V. Or drag the link onto the window.",
   startUsing: "Start using lovelyDL",
+  setUpLater: "Set up later",
+  toolsLater: "Downloads need the tools: install them from Settings › Components when you are ready.",
 
   // Settings window
   tabGeneral: "General",
@@ -295,6 +298,8 @@ export const s = {
   proxyRow: "Proxy:",
   proxyNote: "http://, https:// or socks5:// with a host and port.",
   proxyLabel: "Proxy",
+  templateNotSaved: "Not saved: yt-dlp cannot use this template. The example below says why.",
+  proxyInvalid: "Not saved: that is not a proxy address. Downloads still go direct.",
   proxyNone: "None",
   bigPlaylistsRow: "Big playlists:",
   paceNote: "Waits a few seconds between requests, so sites are less likely to block a long run.",

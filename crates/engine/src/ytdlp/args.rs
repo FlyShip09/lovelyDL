@@ -4,7 +4,7 @@
 use std::path::{Path, PathBuf};
 
 use crate::model::{AudioFormat, DownloadRequest, Options, PlaylistChoice, Preset, Settings, SponsorBlock};
-use crate::ytdlp::parse::{DOWNLOAD_TEMPLATE, FILE_TEMPLATE, POSTPROCESS_TEMPLATE};
+use crate::ytdlp::parse::{DOWNLOAD_TEMPLATE, FILE_TEMPLATE, POSTPROCESS_TEMPLATE, REAL_TEMPLATE};
 
 /// Absolute paths of the tools a run needs. Nothing here is looked up on PATH at run time.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -103,7 +103,11 @@ pub fn format_args(req: &DownloadRequest) -> Vec<String> {
         Preset::Best { max_height } if !picked => a.extend(cap(max_height)),
         Preset::Mp4 { max_height } if !picked => {
             a.extend([s("-t"), s("mp4")]);
-            a.extend(cap(max_height));
+            // H.264 stays first: a bare `res:` cap would outrank it and pick VP9 or AV1 at 1440p
+            // and 2160p, which the remux then wraps in MP4 (checked with 2026.10.26).
+            if let Some(h) = max_height {
+                a.extend([s("-S"), format!("vcodec:h264,res:{h},acodec:aac")]);
+            }
             // The alias only remuxes, which fails when no H.264 exists (an MPEG-2 or VP9 source).
             // Re-encoding happens only when the result is not already MP4 (verified with 2026.10.26).
             a.extend([s("--recode-video"), s("mp4")]);
@@ -145,7 +149,9 @@ fn option_args(o: &Options, audio: bool) -> Vec<String> {
         }
         a.extend([s("--sub-langs"), langs.join(",")]);
         if o.embed_subs {
-            a.push(s("--embed-subs"));
+            // With an explicit --write-subs yt-dlp keeps the subtitle file beside the video;
+            // no-keep-subs deletes it once embedded (yt-dlp 2026.10.26, __init__.py).
+            a.extend([s("--embed-subs"), s("--compat-options"), s("no-keep-subs")]);
         }
     }
     let categories: Vec<&str> =
@@ -245,7 +251,7 @@ pub fn download_args(d: &Download) -> Vec<String> {
     a.extend([s("--progress"), s("--progress-delta"), s("0.25")]);
     a.extend([s("--progress-template"), s(DOWNLOAD_TEMPLATE)]);
     a.extend([s("--progress-template"), s(POSTPROCESS_TEMPLATE)]);
-    a.extend([s("--print"), s(FILE_TEMPLATE)]);
+    a.extend([s("--print"), s(FILE_TEMPLATE), s("--print"), s(REAL_TEMPLATE)]);
     if d.settings.custom_args_enabled {
         a.extend(d.settings.custom_args.iter().filter(|x| !x.trim().is_empty() && *x != "--").cloned());
     }
@@ -336,6 +342,8 @@ mod tests {
             POSTPROCESS_TEMPLATE,
             "--print",
             FILE_TEMPLATE,
+            "--print",
+            REAL_TEMPLATE,
             "--",
             "https://example.test/watch?v=1",
         ];
@@ -396,7 +404,7 @@ mod tests {
             "-t",
             "mp4",
             "-S",
-            "res:720",
+            "vcodec:h264,res:720,acodec:aac",
             "--recode-video",
             "mp4",
             "--embed-metadata",
@@ -409,6 +417,8 @@ mod tests {
             "--sub-langs",
             "en,fr",
             "--embed-subs",
+            "--compat-options",
+            "no-keep-subs",
             "--sponsorblock-remove",
             "sponsor,intro",
             "--download-sections",
@@ -436,6 +446,8 @@ mod tests {
             POSTPROCESS_TEMPLATE,
             "--print",
             FILE_TEMPLATE,
+            "--print",
+            REAL_TEMPLATE,
             "--no-mtime",
             "--load-info-json",
             r"C:\cache\probe\j1.json",
@@ -452,7 +464,10 @@ mod tests {
         assert_eq!(formats(Preset::Best { max_height: None }), "");
         assert_eq!(formats(Preset::Best { max_height: Some(1080) }), "-S res:1080");
         assert_eq!(formats(Preset::Mp4 { max_height: None }), "-t mp4 --recode-video mp4");
-        assert_eq!(formats(Preset::Mp4 { max_height: Some(480) }), "-t mp4 -S res:480 --recode-video mp4");
+        assert_eq!(
+            formats(Preset::Mp4 { max_height: Some(480) }),
+            "-t mp4 -S vcodec:h264,res:480,acodec:aac --recode-video mp4"
+        );
         let audio = |format| formats(Preset::Audio { format });
         assert_eq!(audio(AudioFormat::M4a), "-x --audio-format m4a -S acodec:aac");
         assert_eq!(audio(AudioFormat::Mp3), "-t mp3 --audio-quality 0");
@@ -473,7 +488,7 @@ mod tests {
         let mp4 = Preset::Mp4 { max_height: Some(720) };
         assert_eq!(pick(Some("137"), Some("140"), mp4.clone()), "-f 137+140");
         assert_eq!(pick(Some("18"), None, mp4.clone()), "-f 18");
-        assert_eq!(pick(None, None, mp4), "-t mp4 -S res:720 --recode-video mp4");
+        assert_eq!(pick(None, None, mp4), "-t mp4 -S vcodec:h264,res:720,acodec:aac --recode-video mp4");
         let mp3 = Preset::Audio { format: AudioFormat::Mp3 };
         assert_eq!(pick(None, Some("251"), mp3), "-f 251 -x --audio-format mp3 --audio-quality 0");
     }

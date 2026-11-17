@@ -17,13 +17,15 @@ paywalls, and it does not help anyone do so.
 ## Features
 
 - **Add links any way**: paste anywhere in the window (Ctrl+V), type, drag a link from the
-  browser, or open a `lovelydl://` link. The app notices a link you just copied.
+  browser, or open a `lovelydl://` link. Optionally, the app notices a link you just copied.
 - **Preview first**: title, length, size and the exact resolution you will get, before
-  anything is saved.
-- **Presets**: Best, Compatible MP4 (plays everywhere), resolution caps from 2160p to 480p,
+  anything is saved. Several links at once go straight to the queue with your default format.
+- **Presets**: Best, Compatible MP4 (H.264 and AAC, which plays everywhere; on most sites
+  that tops out at 1080p), resolution caps from 2160p to 480p,
   and audio as M4A, MP3, Opus or FLAC. An Advanced format picker lists every stream.
 - **Queue**: 1–8 downloads at once (3 by default, 2 per site), pause, resume, cancel, retry,
-  drag to reorder, partial downloads that resume after a restart.
+  drag to reorder (or Alt+↑/↓), partial downloads that resume after a restart. A new
+  download never replaces an older file with the same name; it gets a number.
 - **Playlists and channels**: a selection sheet with search, select all or none, shift-click
   ranges, skip what you already have, their own folder and index numbers.
 - **Options**: subtitles (embedded or as files), thumbnail, metadata and chapters,
@@ -37,6 +39,8 @@ paywalls, and it does not help anyone do so.
 - **Tools managed for you**: yt-dlp, ffmpeg and Deno are downloaded from their official
   releases, checked against published SHA-256 sums, kept up to date, and can be rolled back.
   You can use copies already on your PC instead.
+
+<p align="center"><img src="docs/screenshots/app/downloads-light.png" width="760" alt="Two downloads in progress with their thumbnails filling in with color, and two more waiting in the queue"></p>
 
 <p align="center"><img src="docs/screenshots/app/preview-dark.png" width="49%" alt="The same preview in dark mode"> <img src="docs/screenshots/app/settings.png" width="49%" alt="The Settings window"></p>
 
@@ -81,7 +85,7 @@ network requests only to:
 | The sites you download from | When you add a link and download (through yt-dlp), and for thumbnails |
 | `api.github.com`, `github.com`, GitHub's release-asset hosts | Checking for and downloading yt-dlp, ffmpeg (GyanD/codexffmpeg) and Deno; checking for lovelyDL updates |
 | `sponsor.ajay.app` (SponsorBlock) | Only when SponsorBlock is turned on for a download |
-| The proxy you set | When you set one |
+| The proxy you set | For previews and downloads (yt-dlp) when you set one. Thumbnails, tool and app updates connect directly. |
 
 Cookies: when you choose a browser in Settings › Network & Accounts, yt-dlp reads that
 browser's cookies at download time. lovelyDL never copies, stores or logs them. Logs replace
