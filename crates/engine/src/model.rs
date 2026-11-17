@@ -477,7 +477,7 @@ pub enum OnAdd {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
-pub enum Channel {
+pub enum ReleaseChannel {
     Stable,
     Nightly,
 }
@@ -501,7 +501,7 @@ pub struct Settings {
     pub pace_requests: bool,
     /// Browser to read cookies from. Empty means none.
     pub cookies_browser: String,
-    pub ytdlp_channel: Channel,
+    pub ytdlp_channel: ReleaseChannel,
     pub use_system_tools: bool,
     pub auto_update_tools: bool,
     pub custom_ytdlp: String,
@@ -541,7 +541,7 @@ impl Default for Settings {
             proxy: String::new(),
             pace_requests: false,
             cookies_browser: String::new(),
-            ytdlp_channel: Channel::Stable,
+            ytdlp_channel: ReleaseChannel::Stable,
             use_system_tools: false,
             auto_update_tools: true,
             custom_ytdlp: String::new(),
@@ -745,6 +745,8 @@ pub enum Change {
     System(SystemInfo),
     Notice(Notice),
     Command(UiCommand),
+    /// Bring this job's row into view and select it (a notification was clicked).
+    ShowJob(JobId),
     /// History rows changed; a visible history list should query again.
     HistoryChanged,
 }

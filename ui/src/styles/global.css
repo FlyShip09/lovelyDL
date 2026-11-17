@@ -1,0 +1,87 @@
+@import "./tokens.css";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+html {
+  /* Transparent so the system material shows through the sidebar. */
+  background: transparent;
+  overscroll-behavior: none;
+}
+
+body {
+  font: var(--text-body) / var(--text-body-lh) var(--font);
+  color: var(--label);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* App chrome is not text. Titles opt back in with .selectable. */
+  user-select: none;
+  cursor: default;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: default;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input,
+textarea {
+  user-select: text;
+}
+
+img {
+  -webkit-user-drag: none;
+}
+
+a {
+  color: var(--accent-text);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Focus rings for the keyboard only. */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.selectable {
+  user-select: text;
+  cursor: text;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

@@ -1,0 +1,60 @@
+// Test data shared by unit tests.
+
+import type { Job } from "../ipc";
+
+export function job(p: Partial<Job> = {}): Job {
+  return {
+    id: "j1",
+    url: "https://www.youtube.com/watch?v=x",
+    source: "paste",
+    title: "A title",
+    uploader: "Someone",
+    duration: 150,
+    site: "youtube.com",
+    thumbnail: "",
+    kind: "video",
+    request: {
+      preset: { kind: "mp4", maxHeight: null },
+      formats: null,
+      options: {
+        subtitles: false,
+        subLangs: ["en"],
+        autoSubs: false,
+        embedSubs: true,
+        embedThumbnail: true,
+        embedMetadata: true,
+        embedChapters: true,
+        sponsorblock: "off",
+        sponsorblockCategories: [],
+        section: null,
+        preciseCuts: false,
+        liveFromStart: false,
+        waitForLive: false,
+      },
+      destination: null,
+    },
+    state: "queued",
+    progress: {
+      stage: "waiting",
+      stageIndex: 0,
+      stageCount: 0,
+      fraction: null,
+      downloaded: 0,
+      total: null,
+      speed: null,
+      eta: null,
+    },
+    planned: null,
+    output: "",
+    fileMissing: false,
+    bytes: null,
+    error: null,
+    attempts: 0,
+    group: null,
+    cleared: false,
+    createdAt: 0,
+    startedAt: null,
+    finishedAt: null,
+    ...p,
+  };
+}

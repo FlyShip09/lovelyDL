@@ -1,0 +1,29 @@
+.view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s3) var(--s4) var(--s2);
+}
+
+.search {
+  flex: 1;
+  max-width: 360px;
+}
+
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: var(--s4);
+}
+
+.list {
+  position: relative;
+}

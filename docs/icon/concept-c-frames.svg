@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Concept C: two stacked video frames with an arrow. Rejected: busy at 16 px. -->
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="#2F2A3A"/>
+  <rect x="300" y="290" width="424" height="270" rx="36" fill="none" stroke="#FF8597" stroke-width="32"/>
+  <rect x="340" y="330" width="424" height="270" rx="36" fill="#FF8597"/>
+  <path d="M552 640 V760 M500 708 L552 760 L604 708" fill="none" stroke="#fff" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

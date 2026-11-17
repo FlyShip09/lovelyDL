@@ -1,0 +1,253 @@
+/* Pop-up button */
+.popup {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--control-h);
+  padding: 0 4px 0 10px;
+  border: none;
+  border-radius: var(--r-control);
+  background: var(--control);
+  box-shadow:
+    0 0 0 0.5px var(--control-edge),
+    0 0.5px 1px rgb(0 0 0 / 0.08);
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.popup:active,
+.popup[aria-expanded="true"] {
+  filter: brightness(0.94);
+}
+
+.popup:disabled {
+  opacity: 0.45;
+}
+
+.popupLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chevrons {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: var(--accent-solid);
+  color: var(--on-accent);
+  flex: none;
+}
+
+/* Segmented control */
+.segmented {
+  position: relative;
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 7px;
+  background: var(--fill-2);
+}
+
+.segment {
+  position: relative;
+  height: 20px;
+  padding: 0 var(--s3);
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--label);
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.segmentPill {
+  position: absolute;
+  inset: 0;
+  border-radius: 5px;
+  background: var(--control);
+  box-shadow:
+    0 0 0 0.5px var(--control-edge),
+    0 1px 2px rgb(0 0 0 / 0.12);
+  z-index: -1;
+}
+
+@media (prefers-color-scheme: dark) {
+  .segmentPill {
+    background: rgb(255 255 255 / 0.2);
+  }
+}
+
+/* Toggle */
+.toggle {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 9px;
+  background: var(--fill-2);
+  flex: none;
+  transition: background-color 150ms ease-out;
+}
+
+.toggle[aria-checked="true"] {
+  background: var(--accent-solid);
+}
+
+.toggle:disabled {
+  opacity: 0.45;
+}
+
+.knob {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0.5px 2px rgb(0 0 0 / 0.3);
+}
+
+/* Checkbox */
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.box {
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: var(--control);
+  box-shadow:
+    inset 0 0 0 1px var(--control-edge),
+    0 0.5px 1px rgb(0 0 0 / 0.08);
+  color: var(--on-accent);
+  flex: none;
+}
+
+.box[aria-checked="true"],
+.box[aria-checked="mixed"] {
+  background: var(--accent-solid);
+  box-shadow: none;
+}
+
+/* Text fields */
+.field {
+  height: var(--control-h);
+  padding: 0 var(--s2);
+  border: none;
+  border-radius: var(--r-control);
+  background: var(--bg-content);
+  box-shadow:
+    0 0 0 0.5px var(--control-edge),
+    inset 0 0.5px 1px rgb(0 0 0 / 0.06);
+  min-width: 0;
+}
+
+.field:focus-visible,
+.field:focus {
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.field::placeholder {
+  color: var(--label-3);
+}
+
+.field::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search .field {
+  width: 100%;
+  padding-left: 26px;
+  background: var(--fill-1);
+  box-shadow: none;
+}
+
+.search .field:focus {
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.searchIcon {
+  position: absolute;
+  left: 7px;
+  display: grid;
+  color: var(--label-3);
+  pointer-events: none;
+}
+
+/* Progress */
+.track {
+  position: relative;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--fill-2);
+  overflow: hidden;
+}
+
+.bar {
+  position: absolute;
+  inset: 0;
+  border-radius: 2px;
+  background: var(--accent);
+  transform-origin: left center;
+}
+
+.indeterminate {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 30%;
+  border-radius: 2px;
+  background: var(--accent);
+  animation: slide 1.1s ease-in-out infinite;
+}
+
+@keyframes slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(340%);
+  }
+}
+
+/* Spinner */
+.spinner {
+  display: inline-block;
+  border-radius: 50%;
+  border: 2px solid var(--fill-2);
+  border-top-color: var(--label-2);
+  animation: spin 0.8s linear infinite;
+  flex: none;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .indeterminate {
+    animation: none;
+    width: 100%;
+    opacity: 0.4;
+  }
+  .spinner {
+    animation-duration: 2.4s;
+  }
+}

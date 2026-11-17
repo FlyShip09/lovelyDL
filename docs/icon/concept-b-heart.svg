@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Concept B: a heart outline with a down arrow inside. Rejected: reads as a "like" button. -->
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="#F25C7A"/>
+  <path d="M512 760 C380 660 300 590 300 480 C300 400 360 350 425 350 C470 350 495 375 512 400 C529 375 554 350 599 350 C664 350 724 400 724 480 C724 590 644 660 512 760 Z" fill="none" stroke="#fff" stroke-width="44" stroke-linejoin="round"/>
+  <path d="M512 450 V610 M452 555 L512 615 L572 555" fill="none" stroke="#fff" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

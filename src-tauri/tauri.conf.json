@@ -1,0 +1,70 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "lovelyDL",
+  "mainBinaryName": "lovelyDL",
+  "version": "../package.json",
+  "identifier": "com.flyship09.lovelydl",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://localhost:5173",
+    "frontendDist": "../ui/dist"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [],
+    "security": {
+      "csp": {
+        "default-src": "'self'",
+        "script-src": "'self'",
+        "style-src": "'self'",
+        "img-src": "'self' data: blob: http://thumb.localhost thumb:",
+        "connect-src": "ipc: http://ipc.localhost",
+        "font-src": "'self'",
+        "object-src": "'none'",
+        "base-uri": "'none'",
+        "form-action": "'none'",
+        "frame-src": "'none'"
+      },
+      "devCsp": {
+        "default-src": "'self'",
+        "script-src": "'self' 'unsafe-inline'",
+        "style-src": "'self' 'unsafe-inline'",
+        "img-src": "'self' data: blob: http://thumb.localhost thumb:",
+        "connect-src": "ipc: http://ipc.localhost ws://localhost:5173 http://localhost:5173",
+        "object-src": "'none'"
+      },
+      "freezePrototype": true
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "publisher": "FlyShip09",
+    "copyright": "Copyright © 2026 FlyShip09. GPL-3.0-or-later.",
+    "category": "Video",
+    "shortDescription": "Save video and audio from the web",
+    "longDescription": "lovelyDL saves video and audio from the sites yt-dlp supports. Paste a link, get the file.",
+    "homepage": "https://github.com/FlyShip09/lovelyDL",
+    "license": "GPL-3.0-or-later",
+    "licenseFile": "../LICENSE",
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.ico"],
+    "createUpdaterArtifacts": false,
+    "windows": {
+      "webviewInstallMode": { "type": "downloadBootstrapper" },
+      "nsis": {
+        "installMode": "currentUser",
+        "displayLanguageSelector": false
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "",
+      "endpoints": ["https://github.com/FlyShip09/lovelyDL/releases/latest/download/latest.json"]
+    },
+    "deep-link": {
+      "desktop": { "schemes": ["lovelydl"] }
+    }
+  }
+}

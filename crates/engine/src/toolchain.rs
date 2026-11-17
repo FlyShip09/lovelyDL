@@ -11,7 +11,7 @@ use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use tokio::io::AsyncWriteExt;
 
-use crate::model::{Channel, Settings, ToolId, ToolOrigin};
+use crate::model::{ReleaseChannel, Settings, ToolId, ToolOrigin};
 use crate::ytdlp::run;
 
 #[derive(Debug, thiserror::Error)]
@@ -208,10 +208,10 @@ impl Toolchain {
     }
 
     /// The newest release of a tool and the checksum its download must match.
-    pub async fn latest(&self, id: ToolId, channel: Channel) -> Result<Release, ToolError> {
+    pub async fn latest(&self, id: ToolId, channel: ReleaseChannel) -> Result<Release, ToolError> {
         let repo = match (id, channel) {
-            (ToolId::Ytdlp, Channel::Stable) => "yt-dlp/yt-dlp",
-            (ToolId::Ytdlp, Channel::Nightly) => "yt-dlp/yt-dlp-nightly-builds",
+            (ToolId::Ytdlp, ReleaseChannel::Stable) => "yt-dlp/yt-dlp",
+            (ToolId::Ytdlp, ReleaseChannel::Nightly) => "yt-dlp/yt-dlp-nightly-builds",
             (ToolId::Deno, _) => "denoland/deno",
             (ToolId::Ffmpeg, _) => "GyanD/codexffmpeg",
         };

@@ -1,0 +1,123 @@
+/* Design tokens. The source of truth is docs/DESIGN.md. */
+
+:root {
+  color-scheme: light dark;
+
+  --font: "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Segoe UI Variable Display", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Cascadia Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
+
+  /* Type: size / line height */
+  --text-large: 26px;
+  --text-large-lh: 32px;
+  --text-title2: 17px;
+  --text-title2-lh: 22px;
+  --text-title3: 15px;
+  --text-title3-lh: 20px;
+  --text-body: 13px;
+  --text-body-lh: 16px;
+  --text-sub: 11px;
+  --text-sub-lh: 14px;
+  --text-mono: 12px;
+
+  /* Space: a 4-point grid */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 20px;
+  --s6: 24px;
+
+  /* Shape */
+  --r-thumb: 4px;
+  --r-control: 6px;
+  --r-field: 8px;
+  --r-menu: 8px;
+  --r-popover: 10px;
+  --r-sheet: 12px;
+
+  --control-h: 24px;
+  --field-h: 28px;
+  --toolbar-h: 52px;
+  --sidebar-w: 208px;
+  --row-h: 56px;
+  --sidebar-row-h: 28px;
+
+  /* Colors, light */
+  --bg-content: #ffffff;
+  --bg-window: #ececec;
+  --bg-raised: #f6f6f6;
+  --bg-sidebar-solid: #f0f0f0;
+  --fill-1: rgb(0 0 0 / 0.05);
+  --fill-2: rgb(0 0 0 / 0.09);
+  --control: #ffffff;
+  --control-edge: rgb(0 0 0 / 0.14);
+  --label: rgb(0 0 0 / 0.88);
+  --label-2: rgb(0 0 0 / 0.62);
+  --label-3: rgb(0 0 0 / 0.56);
+  --glyph-3: rgb(0 0 0 / 0.3);
+  --separator: rgb(0 0 0 / 0.1);
+  --selection-unfocused: #dcdcdc;
+  --green: #248a3d;
+  --red: #d70015;
+  --orange: #c93400;
+  --scrim: rgb(0 0 0 / 0.18);
+  --shadow-float: 0 0 0 0.5px rgb(0 0 0 / 0.14), 0 8px 30px rgb(0 0 0 / 0.2);
+  --shadow-lift: 0 0 0 0.5px rgb(0 0 0 / 0.1), 0 6px 18px rgb(0 0 0 / 0.16);
+  --thumb-empty: #e4e4e6;
+
+  /* Accent: replaced at start-up with the user's Windows accent (ui/src/system.ts). */
+  --accent: #007aff;
+  --accent-solid: #0064d1;
+  --accent-tint: rgb(0 122 255 / 0.14);
+  --focus-ring: rgb(0 122 255 / 0.5);
+  --on-accent: #ffffff;
+  /* Accent as text: a shade that reaches 4.5:1 on this theme's backgrounds (ui/src/system.ts). */
+  --accent-text: var(--accent-text-light, #005fb8);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-content: #1e1e1e;
+    --bg-window: #282828;
+    --bg-raised: #2c2c2c;
+    --bg-sidebar-solid: #252525;
+    --fill-1: rgb(255 255 255 / 0.07);
+    --fill-2: rgb(255 255 255 / 0.12);
+    --control: rgb(255 255 255 / 0.1);
+    --control-edge: rgb(255 255 255 / 0.08);
+    --label: rgb(255 255 255 / 0.88);
+    --label-2: rgb(255 255 255 / 0.64);
+    --label-3: rgb(255 255 255 / 0.56);
+    --glyph-3: rgb(255 255 255 / 0.3);
+    --separator: rgb(255 255 255 / 0.1);
+    --selection-unfocused: #464646;
+    --green: #30d158;
+    --red: #ff6961;
+    --orange: #ff9f0a;
+    --scrim: rgb(0 0 0 / 0.36);
+    --shadow-float: 0 0 0 0.5px rgb(0 0 0 / 0.6), 0 8px 30px rgb(0 0 0 / 0.45);
+    --shadow-lift: 0 0 0 0.5px rgb(0 0 0 / 0.5), 0 6px 18px rgb(0 0 0 / 0.4);
+    --thumb-empty: #333336;
+    --accent-text: var(--accent-text-dark, #5eb1ff);
+  }
+}
+
+/* Contrast themes: hand everything to the system colors and draw real borders. */
+@media (forced-colors: active) {
+  :root {
+    --bg-content: Canvas;
+    --bg-window: Canvas;
+    --bg-raised: Canvas;
+    --bg-sidebar-solid: Canvas;
+    --label: CanvasText;
+    --label-2: CanvasText;
+    --label-3: GrayText;
+    --separator: CanvasText;
+    --control-edge: ButtonBorder;
+    --accent: Highlight;
+    --accent-solid: Highlight;
+    --on-accent: HighlightText;
+    --focus-ring: Highlight;
+  }
+}

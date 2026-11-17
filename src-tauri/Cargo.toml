@@ -1,0 +1,59 @@
+[package]
+name = "lovelydl"
+description = "A calm, fast video downloader built on yt-dlp"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+default-run = "lovelydl"
+
+[lints]
+workspace = true
+
+[lib]
+name = "lovelydl_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+# Unit tests cannot get the Windows manifest Tauri needs; the tests live in tests/ instead.
+test = false
+doctest = false
+
+[build-dependencies]
+tauri-build = { version = "=2.7.5", features = [] }
+
+[dependencies]
+engine = { path = "../crates/engine" }
+serde.workspace = true
+serde_json.workspace = true
+specta.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+anyhow = "1.0.104"
+tauri = { version = "=2.12.6", features = ["tray-icon", "image-png"] }
+tauri-specta = { version = "=2.0.0-rc.29", features = ["derive", "typescript"] }
+specta-typescript = "=0.0.15"
+tauri-plugin-clipboard-manager = "=2.5.0"
+tauri-plugin-deep-link = "=2.6.3"
+tauri-plugin-dialog = "=2.8.4"
+tauri-plugin-drag = "=2.1.1"
+tauri-plugin-opener = "=2.7.3"
+tauri-plugin-single-instance = { version = "=2.5.5", features = ["deep-link"] }
+tauri-plugin-updater = { version = "=2.14.1", default-features = false, features = ["native-tls", "system-proxy", "zip"] }
+tauri-plugin-window-state = "=2.5.0"
+tracing-appender = "0.2.5"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+url = "2.5.8"
+
+[target.'cfg(windows)'.dependencies]
+tauri-winrt-notification = "=0.8.1"
+# Same versions wry uses, so the WebView2 interfaces Tauri hands out are these types.
+webview2-com = "=0.39.1"
+windows = "=0.62.2"
+windows-sys = { version = "0.61.2", features = [
+    "Win32_Foundation",
+    "Win32_System_Power",
+    "Win32_System_Registry",
+    "Win32_System_DataExchange",
+] }

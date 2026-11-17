@@ -153,3 +153,39 @@ All run with yt-dlp 2026.10.26 on this PC.
 - With "download straight away" on, one link still goes through the probe first; if the probe
   fails there is no queue row, the preview shows the error, its fix and Copy Details. Several
   links at once go to the queue, where each failure is a row.
+
+## 2026-11-17 · Screenshots and accessibility checks run in Chromium, not WebKit
+
+- The brief asks for Playwright WebKit because the macOS app used WKWebView. On Windows the
+  app's web view is WebView2, which is Chromium, so Playwright's Chromium is the faithful
+  stand-in. Real-window captures come from the running app (`scripts/capture-window.ps1`),
+  and the real web view is driven through its debugging port (`scripts/drive-app.mjs`).
+
+## 2026-11-17 · Icons: Lucide
+
+- SF Symbols may only be used on Apple platforms, so the Windows app uses Lucide (ISC), drawn
+  at 1.75–1.9 px strokes to sit with 13 px text. Sidebar icons take the accent color.
+
+## 2026-11-17 · Window chrome drawn by the page
+
+- The window is frameless and transparent. The page draws the traffic lights, the toolbar and
+  the sidebar; empty toolbar space drags the window (`data-tauri-drag-region`) and
+  double-clicking it zooms. The window stays hidden until the page has painted twice, so
+  there is no blank or white frame at launch.
+- Menus are in-window (the toolbar's More menu and context menus). Windows has no global menu
+  bar, and its native menus would break the macOS look.
+- WebView2's browser shortcuts (F5, Ctrl+R, Ctrl+P, Ctrl+F, zoom, F12) are switched off
+  through `ICoreWebView2Settings3`, which Tauri 2.12.6 does not expose. Editing shortcuts
+  stay. Checked with real key presses: F5 and Ctrl+R no longer reload.
+
+## 2026-11-17 · The Windows "Transparency effects" switch is honored
+
+- WebView2 reports that switch as `prefers-reduced-transparency`. When it is off, the sidebar
+  is painted solid instead of showing the material. It is off on the development PC, which is
+  why the real-window screenshots show a solid sidebar.
+
+## 2026-11-17 · Row semantics: grid, not listbox
+
+- Rows carry their own buttons (pause, cancel, retry), which an `option` may not contain. The
+  Downloads and History lists are ARIA grids with rows and grid cells; the playlist sheet,
+  whose rows hold no buttons, stays a listbox with arrow keys and Space.

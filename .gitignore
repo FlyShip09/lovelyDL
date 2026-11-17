@@ -6,7 +6,7 @@ node_modules/
 /ui/test-results/
 /ui/playwright-report/
 # Tauri
-/src-tauri/gen/schemas/
+
 # OS and editors
 .DS_Store
 Thumbs.db
@@ -22,3 +22,5 @@ Thumbs.db
 .env.*
 # Local dev scratch
 /.dev/
+/src-tauri/gen/
+/.claude/

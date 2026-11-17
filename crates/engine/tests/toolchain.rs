@@ -10,7 +10,7 @@ use std::io::Write;
 use std::sync::{Arc, Mutex};
 
 use common::exe;
-use engine::model::{Channel, ToolId};
+use engine::model::{ReleaseChannel, ToolId};
 use engine::toolchain::{ToolError, Toolchain};
 use sha2::{Digest, Sha256};
 
@@ -83,7 +83,7 @@ async fn installs_verify_switch_atomically_and_roll_back() {
         zip_with(&[(exe("yt-dlp").as_str(), binary.as_slice()), ("_internal/base_library.zip", &b"python stdlib"[..])]);
 
     publish_ytdlp(&base, &routes, "2026.10.26", &zip, &sha(&zip));
-    let release = tc.latest(ToolId::Ytdlp, Channel::Stable).await.unwrap();
+    let release = tc.latest(ToolId::Ytdlp, ReleaseChannel::Stable).await.unwrap();
     assert_eq!((release.version.as_str(), release.sha256.clone()), ("2026.10.26", sha(&zip)));
     let fractions = Arc::new(Mutex::new(Vec::new()));
     let seen = fractions.clone();
@@ -98,7 +98,7 @@ async fn installs_verify_switch_atomically_and_roll_back() {
 
     // A second version becomes current; the first is kept for rollback.
     publish_ytdlp(&base, &routes, "2026.11.30", &zip, &sha(&zip));
-    let release = tc.latest(ToolId::Ytdlp, Channel::Stable).await.unwrap();
+    let release = tc.latest(ToolId::Ytdlp, ReleaseChannel::Stable).await.unwrap();
     let second = tc.install(ToolId::Ytdlp, &release, |_| {}).await.unwrap();
     assert_eq!(tc.managed(ToolId::Ytdlp), Some(second.clone()));
     assert!(first.is_file());
@@ -120,7 +120,7 @@ async fn a_download_that_does_not_match_its_checksum_is_thrown_away() {
     let (_dir, tc) = toolchain(&base);
     let zip = zip_with(&[(exe("yt-dlp").as_str(), &b"tampered"[..])]);
     publish_ytdlp(&base, &routes, "2026.10.26", &zip, &"ab".repeat(32));
-    let release = tc.latest(ToolId::Ytdlp, Channel::Stable).await.unwrap();
+    let release = tc.latest(ToolId::Ytdlp, ReleaseChannel::Stable).await.unwrap();
     let error = tc.install(ToolId::Ytdlp, &release, |_| {}).await.unwrap_err();
     assert!(matches!(error, ToolError::Checksum { .. }), "{error}");
     assert_eq!(tc.managed(ToolId::Ytdlp), None);
@@ -133,7 +133,7 @@ async fn a_tool_that_does_not_run_is_not_installed() {
     let (_dir, tc) = toolchain(&base);
     let zip = zip_with(&[(exe("yt-dlp").as_str(), &b"MZ this is not a program"[..])]);
     publish_ytdlp(&base, &routes, "2026.10.26", &zip, &sha(&zip));
-    let release = tc.latest(ToolId::Ytdlp, Channel::Stable).await.unwrap();
+    let release = tc.latest(ToolId::Ytdlp, ReleaseChannel::Stable).await.unwrap();
     let error = tc.install(ToolId::Ytdlp, &release, |_| {}).await.unwrap_err();
     assert!(matches!(error, ToolError::Unhealthy(_)), "{error}");
     assert_eq!(tc.managed(ToolId::Ytdlp), None);
@@ -150,7 +150,7 @@ async fn entries_that_escape_the_folder_are_skipped() {
         (exe("yt-dlp").as_str(), binary.as_slice()),
     ]);
     publish_ytdlp(&base, &routes, "1.0", &zip, &sha(&zip));
-    let release = tc.latest(ToolId::Ytdlp, Channel::Stable).await.unwrap();
+    let release = tc.latest(ToolId::Ytdlp, ReleaseChannel::Stable).await.unwrap();
     tc.install(ToolId::Ytdlp, &release, |_| {}).await.unwrap();
     assert!(!dir.path().join("escaped.txt").exists() && !tc.bin.join("escaped.txt").exists());
 }
@@ -183,7 +183,7 @@ async fn deno_and_ffmpeg_use_the_digest_github_publishes_and_ffmpeg_keeps_two_bi
         r.insert("/dl/ffmpeg-9.0.2-essentials_build.zip".into(), zip.clone());
         r.insert("/repos/denoland/deno/releases/latest".into(), release("deno-x86_64-pc-windows-msvc.zip", None));
     }
-    let ff = tc.latest(ToolId::Ffmpeg, Channel::Stable).await.unwrap();
+    let ff = tc.latest(ToolId::Ffmpeg, ReleaseChannel::Stable).await.unwrap();
     let path = tc.install(ToolId::Ffmpeg, &ff, |_| {}).await.unwrap();
     let mut kept: Vec<String> = std::fs::read_dir(path.parent().unwrap())
         .unwrap()
@@ -193,18 +193,18 @@ async fn deno_and_ffmpeg_use_the_digest_github_publishes_and_ffmpeg_keeps_two_bi
     kept.sort();
     assert_eq!(kept, [exe("ffmpeg"), exe("ffprobe")]);
     // No checksum published at all: refuse rather than install unverified.
-    assert!(matches!(tc.latest(ToolId::Deno, Channel::Stable).await, Err(ToolError::NoChecksum)));
+    assert!(matches!(tc.latest(ToolId::Deno, ReleaseChannel::Stable).await, Err(ToolError::NoChecksum)));
 }
 
 #[tokio::test]
 async fn an_unreachable_or_limiting_server_is_reported_plainly() {
     let (base, routes) = serve();
     let (_dir, tc) = toolchain("http://127.0.0.1:9");
-    assert!(matches!(tc.latest(ToolId::Ytdlp, Channel::Stable).await, Err(ToolError::Network(_))));
+    assert!(matches!(tc.latest(ToolId::Ytdlp, ReleaseChannel::Stable).await, Err(ToolError::Network(_))));
     let (_dir, tc) = toolchain(&base);
     drop(routes);
     assert!(
-        matches!(tc.latest(ToolId::Ytdlp, Channel::Nightly).await, Err(ToolError::Network(_))),
+        matches!(tc.latest(ToolId::Ytdlp, ReleaseChannel::Nightly).await, Err(ToolError::Network(_))),
         "404 is a network error"
     );
 }

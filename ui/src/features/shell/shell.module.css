@@ -1,0 +1,166 @@
+/* Toolbar */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--s1);
+  height: var(--toolbar-h);
+  padding: 0 var(--s3) 0 var(--s2);
+  flex: none;
+  border-bottom: 0.5px solid var(--separator);
+}
+
+.toolbar[data-lights="true"] {
+  padding-left: 0;
+}
+
+.urlWrap {
+  position: relative;
+  flex: 1;
+  min-width: 160px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.url {
+  width: 100%;
+  height: var(--field-h);
+  padding: 0 var(--s3);
+  border: none;
+  border-radius: var(--r-field);
+  background: var(--fill-1);
+  color: var(--label);
+  text-align: left;
+}
+
+.url::placeholder {
+  color: var(--label-3);
+}
+
+.url:focus {
+  box-shadow: 0 0 0 3px var(--focus-ring);
+  background: var(--bg-content);
+}
+
+/* A thin line that runs along the bottom of the field while yt-dlp reads the link. */
+.activity {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 1px;
+  height: 2px;
+  border-radius: 1px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.activity span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 35%;
+  border-radius: 1px;
+  background: var(--accent);
+  animation: run 1s ease-in-out infinite alternate;
+}
+
+@keyframes run {
+  from {
+    transform: translateX(-20%);
+  }
+  to {
+    transform: translateX(210%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .activity span {
+    animation: none;
+    width: 100%;
+    opacity: 0.5;
+  }
+}
+
+.trailing {
+  display: flex;
+  gap: 2px;
+  flex: none;
+}
+
+/* Sidebar */
+.sidebarTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--toolbar-h);
+  padding-right: var(--s2);
+  flex: none;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: var(--s1) var(--s3);
+}
+
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  height: var(--sidebar-row-h);
+  padding: 0 var(--s2);
+  border: none;
+  border-radius: var(--r-control);
+  background: transparent;
+  text-align: left;
+  color: var(--label);
+}
+
+.itemIcon {
+  display: grid;
+  color: var(--accent);
+  z-index: 1;
+}
+
+.itemLabel {
+  flex: 1;
+  z-index: 1;
+}
+
+.count {
+  color: var(--label-2);
+  font-size: var(--text-sub);
+  z-index: 1;
+}
+
+.highlight {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-control);
+  background: var(--fill-2);
+}
+
+/* Drop target */
+.drop {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--bg-content) 55%, transparent);
+  box-shadow: inset 0 0 0 3px var(--accent);
+  border-radius: 0 0 8px 0;
+}
+
+.dropHint {
+  padding: var(--s2) var(--s4);
+  border-radius: var(--r-popover);
+  background: var(--bg-raised);
+  box-shadow: var(--shadow-float);
+  font-weight: 600;
+}
+
+.bannerText {
+  color: var(--label);
+}

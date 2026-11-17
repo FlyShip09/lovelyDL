@@ -1,0 +1,89 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s1);
+  height: var(--control-h);
+  padding: 0 var(--s3);
+  border: none;
+  border-radius: var(--r-control);
+  background: var(--control);
+  box-shadow:
+    0 0 0 0.5px var(--control-edge),
+    0 0.5px 1px rgb(0 0 0 / 0.08);
+  color: var(--label);
+  font-size: var(--text-body);
+  white-space: nowrap;
+  transition:
+    background-color 120ms ease-out,
+    filter 120ms ease-out;
+}
+
+.button:active:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+.button:disabled {
+  opacity: 0.45;
+}
+
+.large {
+  height: var(--field-h);
+  padding: 0 var(--s4);
+}
+
+.primary {
+  background: var(--accent-solid);
+  color: var(--on-accent);
+  box-shadow: 0 0.5px 1px rgb(0 0 0 / 0.16);
+  font-weight: 600;
+}
+
+.plain {
+  background: transparent;
+  box-shadow: none;
+  color: var(--accent-text);
+  padding: 0 var(--s2);
+}
+
+.plain:active:not(:disabled) {
+  background: var(--fill-1);
+  filter: none;
+}
+
+.destructive {
+  color: var(--red);
+}
+
+.iconButton {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--label-2);
+  flex: none;
+}
+
+.iconButton.small {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+}
+
+.iconButton:hover:not(:disabled) {
+  background: var(--fill-1);
+}
+
+.iconButton:active:not(:disabled),
+.iconButton[aria-expanded="true"] {
+  background: var(--fill-2);
+  color: var(--label);
+}
+
+.iconButton:disabled {
+  opacity: 0.4;
+}
