@@ -336,6 +336,19 @@ motion, a more capable app, an ad, and a repository that is easier to find.
 | README screenshots | Retaken from inside the app (`page.screenshot` over the debugging port), so nothing else on the screen can appear in them. A first attempt with a screen grab caught another window and was discarded before any commit |
 | GitHub | Description and 20 topics set; README hero with badges and the ad |
 
+## After M8 · Reliability and the queue's own line — done
+
+| What | Checked how |
+|---|---|
+| A dropped connection starts itself again | Engine test (one link retried three times, one dead link left alone, one notice each). Real app against a port with nothing listening: waits of 5 s, 10 s and 20 s, three attempts, then it gave up and kept the error |
+| Four fragments at a time | Read back from a live download's own command line; golden argv test updated |
+| Old profiles get the faster setting too | Settings version 1 → 2 migration, with a test that a number the user chose is left alone. Checked on the existing test profile: it came back as version 2 with four |
+| The queue's line in the sidebar | Unit test for the arithmetic (a stream of unknown size must not drag the bar down); seen in the real app as "2 downloading · 819 KB/s" |
+
+A render loop slipped in with that line: the selector built a fresh object every render, so the
+whole app re-rendered forever. The browser suite caught it at once; the selector is now
+shallow-compared.
+
 ## Next
 
 Nothing planned. Open decisions for the owner are in the final report: code signing,

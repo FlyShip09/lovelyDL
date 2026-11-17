@@ -22,9 +22,13 @@ pub fn load(path: &Path) -> Settings {
     }
 }
 
-/// Brings settings written by an older version up to date. There is only version 1 so far;
-/// each future version adds one step here.
+/// Brings settings written by an older version up to date. Each new version adds one step.
 fn migrate(mut settings: Settings) -> Settings {
+    // 1 → 2: four fragments at a time is much faster on most sites, and version 1 could only
+    // ever have held yt-dlp's old default of one. Anyone who chose a number keeps it.
+    if settings.version < 2 && settings.concurrent_fragments == 1 {
+        settings.concurrent_fragments = 4;
+    }
     settings.version = SETTINGS_VERSION;
     settings
 }
@@ -82,6 +86,20 @@ mod tests {
         assert_eq!(got.filename_template, DEFAULT_TEMPLATE);
         assert_eq!(got.proxy, "http://127.0.0.1:8080");
         assert!(!path.with_extension("json.tmp").exists());
+    }
+
+    #[test]
+    fn an_old_file_gets_the_faster_fragment_default() {
+        let dir = tempfile::tempdir().unwrap_or_else(|e| panic!("{e}"));
+        let path = dir.path().join("settings.json");
+        std::fs::write(&path, r#"{"version":1,"concurrentFragments":1,"maxConcurrent":3}"#)
+            .unwrap_or_else(|e| panic!("{e}"));
+        assert_eq!(load(&path).concurrent_fragments, 4);
+        // A number the user picked is theirs, and so is anything already on version 2.
+        std::fs::write(&path, r#"{"version":1,"concurrentFragments":8}"#).unwrap_or_else(|e| panic!("{e}"));
+        assert_eq!(load(&path).concurrent_fragments, 8);
+        std::fs::write(&path, r#"{"version":2,"concurrentFragments":1}"#).unwrap_or_else(|e| panic!("{e}"));
+        assert_eq!(load(&path).concurrent_fragments, 1);
     }
 
     #[test]

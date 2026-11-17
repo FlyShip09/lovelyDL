@@ -526,7 +526,7 @@ pub struct Settings {
     pub last_tool_check: f64,
 }
 
-pub const SETTINGS_VERSION: u32 = 1;
+pub const SETTINGS_VERSION: u32 = 2;
 
 impl Default for Settings {
     fn default() -> Self {
