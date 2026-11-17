@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 
 import { Button } from "../../components/Button";
-import { TrafficLights } from "../../components/chrome";
+import { CaptionButtons, TrafficLights } from "../../components/chrome";
 import { Checkbox, PopUpButton, ProgressBar, TextField, Toggle } from "../../components/controls";
 import { Icon } from "../../components/Icon";
 import { MenuHost } from "../../components/Menu";
@@ -575,6 +575,9 @@ export function App() {
       <div className={styles.toolbar} data-tauri-drag-region>
         <div className={styles.lights}>
           <TrafficLights canMinimize={false} canZoom={false} />
+        </div>
+        <div className={styles.caption}>
+          <CaptionButtons canMinimize={false} canZoom={false} />
         </div>
         <div className={styles.tabs} role="tablist" data-tauri-drag-region>
           {tabs.map((t) => (

@@ -5,7 +5,7 @@ import { AnimatePresence, motion, useIsPresent, type HTMLMotionProps } from "mot
 import { useState } from "react";
 
 import { Button } from "../../components/Button";
-import { TrafficLights } from "../../components/chrome";
+import { CaptionButtons, TrafficLights } from "../../components/chrome";
 import { ProgressBar, Toggle } from "../../components/controls";
 import type { Tool } from "../../ipc";
 import { commands } from "../../ipc";
@@ -185,6 +185,8 @@ export function Onboarding() {
     <div className={styles.window}>
       <div className={styles.top} data-tauri-drag-region>
         <TrafficLights />
+        <span data-tauri-drag-region />
+        <CaptionButtons />
       </div>
       <div className={styles.stage}>
         <AnimatePresence mode="popLayout" initial={false} custom={direction}>

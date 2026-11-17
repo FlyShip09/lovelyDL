@@ -15,6 +15,8 @@ export const s = {
   close: "Close",
   minimize: "Minimize",
   zoom: "Zoom",
+  maximize: "Maximize",
+  restore: "Restore",
 
   // Sidebar
   downloads: "Downloads",

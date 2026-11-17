@@ -1,12 +1,13 @@
-// Window chrome: the traffic lights, sheets and banners.
+// Window chrome: the window's own buttons, sheets and banners.
 
 import { AnimatePresence, motion, useIsPresent } from "motion/react";
 import type { ReactNode } from "react";
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useRef, useSyncExternalStore } from "react";
 
-import { commands } from "../ipc";
+import { commands, inTauri } from "../ipc";
 import { fade, gentle, smooth } from "../motion/tokens";
 import { s } from "../strings";
+import { isMac } from "../system";
 import styles from "./chrome.module.css";
 
 const glyph = {
@@ -15,7 +16,7 @@ const glyph = {
   zoom: <path d="M1.8 4.6V1.8h2.8M6.2 3.4v2.8H3.4" fill="none" stroke="currentColor" strokeWidth="1.1" />,
 };
 
-/** Close, minimize and zoom, drawn as on a Mac. Keyboard users have Alt+F4 and Win+arrows. */
+/** Close, minimize and zoom as a Mac draws them. Windows gets `CaptionButtons` instead. */
 export function TrafficLights({
   canMinimize = true,
   canZoom = true,
@@ -23,6 +24,7 @@ export function TrafficLights({
   canMinimize?: boolean;
   canZoom?: boolean;
 }) {
+  if (!isMac) return null;
   const button = (kind: "close" | "minimize" | "zoom", label: string, enabled: boolean) => (
     <button
       type="button"
@@ -42,6 +44,64 @@ export function TrafficLights({
       {button("close", s.close, true)}
       {button("minimize", s.minimize, canMinimize)}
       {button("zoom", s.zoom, canZoom)}
+    </div>
+  );
+}
+
+// Windows' caption glyphs: hairlines on a 10 px grid, as the system draws them.
+const caption = {
+  minimize: <path d="M0 5.5h10" />,
+  maximize: <rect x="0.5" y="0.5" width="9" height="9" />,
+  restore: (
+    <>
+      <rect x="0.5" y="2.5" width="7" height="7" />
+      <path d="M2.5 2.5v-2h7v7h-2" />
+    </>
+  ),
+  close: <path d="M0 0l10 10M10 0L0 10" />,
+};
+
+// The page gets no event for maximizing; a maximized window simply fills the work area.
+const onResize = (changed: () => void) => {
+  window.addEventListener("resize", changed);
+  return () => window.removeEventListener("resize", changed);
+};
+const fillsScreen = () =>
+  // In a browser tab (mock mode) the page always "fills" its screen, which means nothing.
+  inTauri && window.outerWidth >= screen.availWidth && window.outerHeight >= screen.availHeight;
+
+/**
+ * Minimize, maximize and close at the window's top right, as on Windows. Not in the tab
+ * order, like the system's own; keyboard users have Alt+F4 and Win+arrows.
+ */
+export function CaptionButtons({
+  canMinimize = true,
+  canZoom = true,
+}: {
+  canMinimize?: boolean;
+  canZoom?: boolean;
+}) {
+  const maximized = useSyncExternalStore(onResize, fillsScreen);
+  if (isMac) return null;
+  const button = (kind: "minimize" | "zoom" | "close", icon: keyof typeof caption, label: string) => (
+    <button
+      type="button"
+      tabIndex={-1}
+      aria-label={label}
+      title={label}
+      className={`${styles.captionButton} ${kind === "close" ? styles.captionClose : ""}`}
+      onClick={() => void commands.windowAction(kind)}
+    >
+      <svg viewBox="0 0 10 10" aria-hidden>
+        {caption[icon]}
+      </svg>
+    </button>
+  );
+  return (
+    <div className={styles.caption}>
+      {canMinimize && button("minimize", "minimize", s.minimize)}
+      {canZoom && button("zoom", maximized ? "restore" : "maximize", maximized ? s.restore : s.maximize)}
+      {button("close", "close", s.close)}
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { Ellipsis, PanelLeft, Settings } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { IconButton } from "../../components/Button";
-import { TrafficLights } from "../../components/chrome";
+import { CaptionButtons, TrafficLights } from "../../components/chrome";
 import { type MenuItem, openMenuBelow } from "../../components/Menu";
 import { commands } from "../../ipc";
 import { addLinks, clearLinkError, openSheet, saveSettings, useApp } from "../../store/app";
@@ -111,6 +111,7 @@ export function Toolbar({ sidebarVisible }: { sidebarVisible: boolean }) {
         />
         <IconButton icon={Settings} label={s.settings} onClick={() => void commands.openSettings()} />
       </div>
+      <CaptionButtons />
     </div>
   );
 }

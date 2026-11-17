@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 
 import { IconButton } from "../../components/Button";
 import { TrafficLights } from "../../components/chrome";
+import { isMac } from "../../system";
 import { Icon } from "../../components/Icon";
 import { snappy } from "../../motion/tokens";
 import { setView, useApp, type View } from "../../store/app";
@@ -54,6 +55,13 @@ export function Sidebar() {
     <>
       <div className={styles.sidebarTop} data-tauri-drag-region>
         <TrafficLights />
+        {/* On Windows the bar's left end names the app, as title bars there do. */}
+        {!isMac && (
+          <span className={styles.brand} data-tauri-drag-region>
+            <img src="/icon.svg" alt="" />
+            {s.app}
+          </span>
+        )}
         <IconButton icon={PanelLeft} label={s.toggleSidebar} onClick={toggleSidebar} />
       </div>
       <div className={styles.list} role="tablist" aria-orientation="vertical" aria-label={s.sections}>

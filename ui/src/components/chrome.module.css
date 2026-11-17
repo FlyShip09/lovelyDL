@@ -1,3 +1,68 @@
+/* Windows caption buttons: 46 px wide, full bar height, flush with the window's top right. */
+.caption {
+  display: flex;
+  align-self: stretch;
+  flex: none;
+}
+
+.captionButton {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  min-height: 32px;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--label);
+  transition:
+    background-color 120ms ease-out,
+    color 120ms ease-out;
+}
+
+.captionButton svg {
+  width: 10px;
+  height: 10px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+.captionButton:hover {
+  background: var(--fill-1);
+}
+
+.captionButton:active {
+  background: var(--fill-2);
+}
+
+/* The system's close red. */
+.captionClose:hover {
+  background: #c42b1c;
+  color: #fff;
+}
+
+.captionClose:active {
+  background: #b3271a;
+  color: rgb(255 255 255 / 0.8);
+}
+
+.captionClose svg {
+  shape-rendering: geometricPrecision;
+}
+
+:root[data-window-focused="false"] .captionButton:not(:hover) {
+  color: var(--label-3);
+}
+
+@media (forced-colors: active) {
+  .captionButton:hover {
+    background: Highlight;
+    color: HighlightText;
+  }
+}
+
 /* Traffic lights: 12 px circles, centers 20 px apart, on the toolbar's center line. */
 .lights {
   display: flex;

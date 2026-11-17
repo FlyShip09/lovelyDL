@@ -68,9 +68,13 @@ export function applySystem(system: SystemInfo) {
   root.style.setProperty("--accent-text-dark", css(readableOn(rgb, [0x3a, 0x3a, 0x3a])));
 }
 
-/** Keeps `data-window-focused` on <html> current. */
+/** Window buttons follow the platform: three lights on a Mac, caption buttons on Windows. */
+export const isMac = /Mac/i.test(navigator.userAgent);
+
+/** Keeps `data-window-focused` on <html> current, and names the platform for the styles. */
 export function trackWindowFocus() {
   const root = document.documentElement;
+  root.dataset.platform = isMac ? "mac" : "windows";
   const update = () => (root.dataset.windowFocused = String(document.hasFocus()));
   window.addEventListener("focus", update);
   window.addEventListener("blur", update);

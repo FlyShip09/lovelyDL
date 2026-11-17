@@ -9,8 +9,17 @@
   border-bottom: 0.5px solid var(--separator);
 }
 
-.toolbar[data-lights="true"] {
+:root[data-platform="mac"] .toolbar[data-lights="true"] {
   padding-left: 0;
+}
+
+/* Caption buttons sit flush with the window's edge. */
+:root[data-platform="windows"] .toolbar {
+  padding-right: 0;
+}
+
+:root[data-platform="windows"] .trailing {
+  margin-right: var(--s1);
 }
 
 .urlWrap {
@@ -93,6 +102,21 @@
   height: var(--toolbar-h);
   padding-right: var(--s2);
   flex: none;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding-left: 14px;
+  font-size: 12px;
+  color: var(--label-2);
+}
+
+.brand img {
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
 }
 
 .list {
