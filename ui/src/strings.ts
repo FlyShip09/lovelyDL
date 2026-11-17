@@ -40,6 +40,7 @@ export const s = {
   // Empty states
   emptyTitle: "Nothing downloading",
   emptyBody: "Paste a link with Ctrl+V, or drag one here from your browser.",
+  pasteLink: "Paste link",
   emptyFailedTitle: "No failed downloads",
   emptyFailedBody: "Downloads that fail show up here with a way to fix them.",
   emptyHistoryTitle: "No history yet",

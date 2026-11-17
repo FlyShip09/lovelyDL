@@ -1,12 +1,12 @@
-import { X } from "lucide-react";
+import { ArrowDownToLine, CircleCheck, X } from "lucide-react";
 import { AnimatePresence, motion, Reorder } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { IconButton } from "../../components/Button";
+import { Button, IconButton } from "../../components/Button";
 import type { Job } from "../../ipc";
 import { commands } from "../../ipc";
 import { fade, smooth } from "../../motion/tokens";
-import { clearLinkError, focusHandled, select, startPreview, useApp } from "../../store/app";
+import { acceptClipboard, clearLinkError, focusHandled, select, startPreview, useApp } from "../../store/app";
 import { groupJobs, isActive, type SectionId, sectionOf, sectionTitle } from "../../store/derive";
 import { s } from "../../strings";
 import { primaryAction } from "./actions";
@@ -33,10 +33,30 @@ function arrange(order: string[], jobs: Record<string, Job>, place: (job: Job) =
 }
 
 function Empty({ failedOnly }: { failedOnly: boolean }) {
+  // The hint names the keys; they are drawn as keycaps.
+  const [before, after] = s.emptyBody.split("Ctrl+V");
   return (
     <div className={styles.empty}>
+      <span className={styles.emptyArt} aria-hidden>
+        {failedOnly ? (
+          <CircleCheck size={30} strokeWidth={1.6} />
+        ) : (
+          <ArrowDownToLine size={30} strokeWidth={1.6} />
+        )}
+      </span>
       <span className={styles.emptyTitle}>{failedOnly ? s.emptyFailedTitle : s.emptyTitle}</span>
-      <span className={styles.emptyBody}>{failedOnly ? s.emptyFailedBody : s.emptyBody}</span>
+      {failedOnly ? (
+        <span className={styles.emptyBody}>{s.emptyFailedBody}</span>
+      ) : (
+        <>
+          <span className={styles.emptyBody}>
+            {before}
+            <kbd>Ctrl</kbd> <kbd>V</kbd>
+            {after}
+          </span>
+          <Button onClick={() => void acceptClipboard()}>{s.pasteLink}</Button>
+        </>
+      )}
     </div>
   );
 }

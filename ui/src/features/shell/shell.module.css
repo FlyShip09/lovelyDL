@@ -138,6 +138,13 @@
   background: transparent;
   text-align: left;
   color: var(--label);
+  transition: background-color 120ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .item:hover:not([aria-selected="true"]) {
+    background: var(--fill-1);
+  }
 }
 
 .itemIcon {

@@ -96,8 +96,19 @@
   contain-intrinsic-size: auto var(--row-h);
 }
 
+.row {
+  transition: background-color 120ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .row:hover:not([aria-selected="true"]) {
+    background: var(--fill-1);
+  }
+}
+
 .row[aria-selected="true"] {
   background: var(--selection-unfocused);
+  transition: none;
 }
 
 :root[data-window-focused="true"] .list:focus-within .row[aria-selected="true"] {
@@ -199,7 +210,8 @@
 
 /* Empty state */
 .empty {
-  flex: 1;
+  /* A little above the middle, where the eye rests; room below for a message. */
+  height: 86%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -209,6 +221,35 @@
   text-align: center;
 }
 
+.emptyArt {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  margin-bottom: var(--s2);
+  border-radius: 20px;
+  background: var(--accent-tint);
+  color: var(--accent-text);
+}
+
+.empty kbd {
+  display: inline-block;
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: var(--control);
+  box-shadow:
+    0 0 0 0.5px var(--control-edge),
+    0 1px 0 0.5px var(--control-edge);
+  font: inherit;
+  font-size: var(--text-sub);
+  color: var(--label);
+}
+
+.empty button {
+  margin-top: var(--s3);
+}
+
 .emptyTitle {
   font-size: var(--text-title3);
   line-height: var(--text-title3-lh);
@@ -216,7 +257,7 @@
 }
 
 .emptyBody {
-  max-width: 320px;
+  max-width: 420px;
   color: var(--label-2);
 }
 
@@ -366,5 +407,31 @@
   .failedStatus {
     color: CanvasText;
     text-decoration: underline;
+  }
+}
+
+/* The empty state arrives in three soft steps: picture, title, then the hint. */
+.empty > * {
+  animation: rise 360ms var(--ease-out) backwards;
+}
+
+.empty > :nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.empty > :nth-child(n + 3) {
+  animation-delay: 110ms;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .empty > * {
+    animation: none;
   }
 }

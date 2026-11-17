@@ -15,12 +15,25 @@
   font-size: var(--text-body);
   white-space: nowrap;
   transition:
-    background-color 120ms ease-out,
-    filter 120ms ease-out;
+    background-color 120ms ease,
+    filter 120ms ease,
+    transform 140ms var(--ease-out);
 }
 
+/* A press is felt: the control gives a little, and springs back on release. */
 .button:active:not(:disabled) {
   filter: brightness(0.92);
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .button:hover:not(:disabled):not(:active) {
+    filter: brightness(0.97);
+  }
+
+  .primary:hover:not(:disabled):not(:active) {
+    filter: brightness(1.08);
+  }
 }
 
 .button:disabled {
@@ -66,6 +79,10 @@
   background: transparent;
   color: var(--label-2);
   flex: none;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    transform 140ms var(--ease-out);
 }
 
 .iconButton.small {
@@ -84,6 +101,10 @@
   color: var(--label);
 }
 
+.iconButton:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
 .iconButton:disabled {
   opacity: 0.4;
 }
@@ -99,5 +120,12 @@
     background: Canvas;
     color: GrayText;
     outline-color: GrayText;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button:active:not(:disabled),
+  .iconButton:active:not(:disabled) {
+    transform: none;
   }
 }

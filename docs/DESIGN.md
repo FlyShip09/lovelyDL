@@ -35,10 +35,11 @@ carry the color; the chrome stays neutral. This file is the source for `ui/src/s
    sidebar 208              content pane, opaque, min window 720 × 460
 ```
 
-- The window is frameless. Traffic-light controls (close, minimize, zoom) sit at the top left
-  over the sidebar: 12 px circles, centers 20 px apart, first center 20 px from the left edge,
-  on the toolbar's center line. Glyphs appear on hover of the group. Gray when the window is
-  not focused.
+- The window is frameless, and its buttons follow the platform. On Windows: caption buttons
+  (minimize, maximize or restore, close) at the top right, 46 px wide and as tall as the
+  toolbar, hairline glyphs, the system's red on close; the app's icon and name sit at the top
+  left of the sidebar. On macOS: traffic lights at the top left, 12 px circles with centers
+  20 px apart, glyphs on hover. Both dim when the window is not focused.
 - The sidebar runs edge to edge, top to bottom, on the system material. A hairline separates
   it from the content pane.
 - Empty toolbar space drags the window; double-click zooms it.
@@ -110,14 +111,14 @@ Each control is purpose-built; there is no component kit.
 
 | Control | Look |
 |---|---|
-| Push button | 24 high, radius 6, `--control` fill with a hairline; primary = `--accent-solid` with white text. Pressed darkens on pointer-down. No scale, no hover lift. |
+| Push button | 24 high, radius 6, `--control` fill with a hairline; primary = `--accent-solid` with white text. Hover shifts brightness slightly; a press darkens and gives a little (`scale(0.97)`, 140 ms, `--ease-out`). No hover lift. |
 | Pop-up button | Push button with a double chevron; opens a menu anchored to it. |
 | Segmented control | `--fill-2` track; the selected segment is a raised pill that slides. |
 | Toggle | 32 × 18 switch, accent when on. |
 | Checkbox | 14 × 14, radius 4, accent fill with a white check. |
 | Text field | 24 high, radius 6, hairline; accent ring on keyboard focus. |
 | URL field | 28 high, radius 8, `--fill-1`; a 2 px activity line runs along its bottom while probing. |
-| Progress bar | 3 px track in `--fill-2`, accent fill, interpolated between updates. |
+| Progress bar | 3 px track in `--fill-2`, accent fill, interpolated between updates; a soft light travels along the fill while work is under way. |
 | Activity indicator | 14 px spinner, shown only while work is happening. |
 | Row | 56 high; thumbnail 64 × 36; selection fills the row with `--accent-solid`. |
 | Menu | Opaque `--bg-raised`, radius 8, 5 px padding; highlighted item uses `--accent-solid`. |
@@ -151,7 +152,13 @@ Final values, tuned against contact sheets of recorded flows (`scripts/record-mo
 | `gentle` | spring, bounce 0, 0.42 s | Sheets, the preview card |
 | `fade` | 150 ms ease-out | Opacity and color, status text crossfades |
 
-Nothing overshoots. The only gesture-driven motion, dragging a queued row, uses `smooth`.
+Nothing in everyday use overshoots; the one exception is first run, where the welcome icon
+lands with a soft spring. The only gesture-driven motion, dragging a queued row, uses `smooth`.
+
+CSS easing tokens: `--ease-out` `cubic-bezier(0.23, 1, 0.32, 1)` for anything answering the
+pointer (presses 140 ms, hovers 120 ms), `--ease-in-out` for movement, `--ease-spring` for the
+first-run icon. Rows and sidebar items fade their hover fill; pressable controls scale to
+0.97 (icon buttons 0.92) while held.
 
 Choreography as built:
 
@@ -177,8 +184,10 @@ Choreography as built:
 11. **Dragging a link in** dims the content and draws an inset accent outline.
 12. **Clipboard and update banners** slide down from under the toolbar.
 13. **Onboarding** steps slide sideways; installs show real progress.
-14. **Launch.** No splash and no entrance animation: what is on screen at launch is simply
-    there (checked on the contact sheets).
+14. **Launch.** No splash. Rows and chrome are simply there; only the empty state arrives, in
+    three soft steps (picture, title, hint), because it is an invitation rather than content.
+15. **First run.** The welcome icon lands with a soft spring and the three tools arrive one
+    after another.
 
 Reduce Motion (Windows "Animation effects" off, `prefers-reduced-motion`): Motion's
 `reducedMotion="user"` turns movement into instant changes and keeps opacity, the thumbnail

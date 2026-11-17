@@ -323,3 +323,31 @@ All run with yt-dlp 2026.10.26 on this PC.
 - "Video or whole playlist?" is asked only for YouTube links carrying both `v` and `list`.
 - The download archive is written for playlist items started with "skip already
   downloaded" on, not for single videos.
+
+## 2026-11-17 · Window buttons follow the platform
+
+- The owner asked for the three Mac-style lights only on macOS. On Windows the window now has
+  caption buttons at the top right (hairline SVG glyphs rather than the Segoe icon font, so
+  they look the same on every Windows version and in CI) and the app's icon and name at the
+  top left. The lights component remains and renders only when the user agent is a Mac.
+- The page gets no event for maximizing, so the restore glyph shows when the window fills
+  the work area.
+
+## 2026-11-17 · More motion, by request
+
+- The first design kept controls still ("no scale"). The owner asked for a smoother, livelier
+  feel, so pressable controls now give on press, rows and sidebar items fade their hover
+  fill, active progress bars carry a travelling light, and the empty state and first run have
+  short entrances. All movement is off under Reduce Motion; durations stay under 300 ms
+  except the first-run spring.
+- The empty Downloads view is now a centered invitation (picture, keycaps, a Paste link
+  button) instead of two lines at the top.
+
+## 2026-11-17 · Waiting downloads are looked at ahead of their turn
+
+- Links added several at a time used to show their raw address until a slot came free. One
+  at a time, the engine now fetches the next waiting link's title and thumbnail and caches
+  the answer; the download then starts from the cache, so no link is asked for twice (a
+  waiting job under examination is skipped by the scheduler until the answer is in). A
+  DRM-protected item is refused right there.
+

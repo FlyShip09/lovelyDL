@@ -13,11 +13,18 @@
     0 0.5px 1px rgb(0 0 0 / 0.08);
   white-space: nowrap;
   max-width: 100%;
+  transition:
+    filter 120ms ease,
+    transform 140ms var(--ease-out);
 }
 
 .popup:active,
 .popup[aria-expanded="true"] {
   filter: brightness(0.94);
+}
+
+.popup:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .popup:disabled {
@@ -205,6 +212,23 @@
   border-radius: 2px;
   background: var(--accent);
   transform-origin: left center;
+  overflow: hidden;
+}
+
+/* A light that travels along the filled part while work is under way. */
+.bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.5), transparent);
+  transform: translateX(-100%);
+  animation: sheen 1.8s linear infinite;
+}
+
+@keyframes sheen {
+  to {
+    transform: translateX(100%);
+  }
 }
 
 .indeterminate {
@@ -238,6 +262,17 @@
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar::after {
+    animation: none;
+    display: none;
+  }
+
+  .popup:active:not(:disabled) {
+    transform: none;
   }
 }
 

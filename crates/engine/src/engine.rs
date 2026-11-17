@@ -156,6 +156,10 @@ struct Core {
     probed: HashMap<JobId, Instant>,
     /// Jobs that already got their one re-probe after an HTTP 403.
     reprobed: HashSet<JobId>,
+    /// The waiting download whose title and thumbnail are being fetched ahead of its turn.
+    peeking: Option<JobId>,
+    /// Waiting downloads already looked at, so a link that will not load is tried once.
+    peeked: HashSet<JobId>,
     /// Jobs saving under a numbered name because the plain one was taken: id → number.
     renamed: HashMap<JobId, u32>,
     logs: HashMap<JobId, JobLog>,
@@ -320,6 +324,8 @@ impl Engine {
             stopping: HashMap::new(),
             probed: HashMap::new(),
             reprobed: HashSet::new(),
+            peeking: None,
+            peeked: HashSet::new(),
             renamed: HashMap::new(),
             logs: HashMap::new(),
             preview: None,
@@ -917,7 +923,11 @@ impl Core {
             }
             let site = per_site.entry(Self::site_of(job)).or_default();
             // A job whose old process is still exiting waits, so two never share partial files.
-            if *site >= self.settings.max_per_site || stopping.contains(&job.id) {
+            // One being looked at ahead of its turn waits for that answer instead of asking twice.
+            if *site >= self.settings.max_per_site
+                || stopping.contains(&job.id)
+                || self.peeking.as_ref() == Some(&job.id)
+            {
                 continue;
             }
             *site += 1;
@@ -927,9 +937,67 @@ impl Core {
         for id in start {
             self.start(&id);
         }
+        self.peek_ahead();
         if active == 0 {
             self.check_for_tool_updates();
         }
+    }
+
+    /// Fetches the title and thumbnail of the next waiting download that still shows only its
+    /// link, one at a time, so the queue reads as a list of videos. The answer is cached, and
+    /// the download later starts from it without asking the site again.
+    fn peek_ahead(&mut self) {
+        if self.peeking.is_some() || self.shutdown.is_some() || !self.components.ytdlp.ready() {
+            return;
+        }
+        let Some(tools) = self.tools() else { return };
+        let waiting = |j: &&Job| j.state == JobState::Queued && j.title.is_empty() && !self.peeked.contains(&j.id);
+        let Some((id, url)) = self.jobs.iter().find(waiting).map(|j| (j.id.clone(), j.url.clone())) else { return };
+        self.peeked.insert(id.clone());
+        self.peeking = Some(id.clone());
+        let args = args::probe_args(&url, PlaylistChoice::Video, &self.settings, &tools);
+        let (me, path) = (self.me.clone(), self.cache_path(&id));
+        tokio::spawn(async move {
+            let out = run::output(&tools.ytdlp, &args, 60).await.ok();
+            let found = out.and_then(|out| {
+                out.stdout.lines().find_map(|line| match probe::parse_probe_line(line) {
+                    Some(Probed::Media(media)) => Some((media, line.to_string())),
+                    _ => None,
+                })
+            });
+            // A protected item is never cached: it is refused below, before any download.
+            let cached = match (&found, path) {
+                (Some((media, raw)), Some(path)) if !media.drm => match probe::cacheable(raw) {
+                    Some(clean) => write_atomic(&path, clean.as_bytes()).await.is_ok(),
+                    None => false,
+                },
+                _ => false,
+            };
+            let _ = me.send(Box::new(move |core| {
+                core.peeking = None;
+                core.needs_pump = true;
+                let (Some((media, _)), Some(i)) = (found, core.index(&id)) else { return };
+                if core.jobs[i].state != JobState::Queued {
+                    return;
+                }
+                let job = &mut core.jobs[i];
+                job.title = media.title.clone();
+                job.uploader = media.uploader.clone();
+                job.duration = media.duration;
+                job.site = media.site.clone();
+                if !media.thumbnail.is_empty() {
+                    job.thumbnail = media.thumbnail.clone();
+                }
+                job.planned = Some(probe::approx_resolve(&media, &job.request));
+                if media.drm {
+                    return core.fail(&id, errors::error(ErrorKind::Drm, "This video is DRM protected"));
+                }
+                if cached {
+                    core.probed.insert(id.clone(), Instant::now());
+                }
+                core.changed(i);
+            }));
+        });
     }
 
     fn tools(&self) -> Option<Tools> {

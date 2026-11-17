@@ -171,3 +171,42 @@
 .dot[data-on="true"] {
   background: var(--label-2);
 }
+
+/* First run only happens once, so it may charm a little: the icon lands with a soft spring
+   and the tools arrive one after another. */
+.icon {
+  animation: land 560ms var(--ease-spring) backwards;
+}
+
+.tool {
+  animation: arrive 360ms var(--ease-out) backwards;
+}
+
+.tool:nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.tool:nth-child(3) {
+  animation-delay: 110ms;
+}
+
+@keyframes land {
+  from {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon,
+  .tool {
+    animation: none;
+  }
+}

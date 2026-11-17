@@ -475,3 +475,21 @@ async fn quick_settings_changes_end_with_the_newest_on_disk() {
     }
     panic!("settings.json never reached the newest value: {:?}", std::fs::read_to_string(&path));
 }
+
+#[tokio::test]
+async fn waiting_downloads_get_their_titles_ahead_of_their_turn() {
+    let mut h = ready(Setup { line_ms: 150, settings: Box::new(|s| s.max_concurrent = 1), ..Setup::default() }).await;
+    let links: Vec<String> = (1..=3).map(|n| format!("{}?n={n}", fake_url("generic_direct"))).collect();
+    h.engine.add_links(links.join("\n"), Source::Paste).await.unwrap();
+    // With one slot, the others wait: they show their titles before any of them starts.
+    h.wait_for("a waiting job has its title", |h| {
+        h.jobs.iter().any(|j| j.state == JobState::Queued && !j.title.is_empty())
+    })
+    .await;
+    h.wait_for("all completed", |h| h.jobs.len() == 3 && h.jobs.iter().all(|j| j.state == JobState::Completed)).await;
+    assert_eq!(h.peak_active, 1);
+    // Looking ahead replaces the download's own probe; no link is ever asked for twice.
+    let modes = h.modes("generic_direct");
+    assert_eq!(modes.iter().filter(|m| *m == "probe").count(), 3, "{modes:?}");
+    assert_eq!(modes.iter().filter(|m| *m == "download").count(), 3, "{modes:?}");
+}
