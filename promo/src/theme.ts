@@ -23,17 +23,39 @@ export const SETTLE = Easing.spring({ damping: 200 }); // arrives without bounce
 export const GLIDE = Easing.bezier(0.45, 0, 0.15, 1); // moves between two rests
 export const LEAVE = Easing.bezier(0.5, 0, 0.9, 0.4); // exits quickly
 
-/** The recorded app: how long it runs and what happens when (see capture.mjs). */
-export const APP_FRAMES = captures.frames.length;
+/** Where the app window sits on screen, and the scale from capture pixels to video pixels. */
+export const WIN = {
+  w: 1300,
+  h: Math.round((1300 * captures.height) / captures.width),
+  x: Math.round((WIDTH - 1300) / 2),
+  y: Math.round((HEIGHT - (1300 * captures.height) / captures.width) / 2),
+};
+export const K = WIN.w / captures.width;
+
+/** The desktop shortcut: the icon's centre, and how big it is. */
+export const SHORTCUT = { x: 186, y: 196, size: 96 };
+
+// The recording (see capture.mjs) runs its first-run pages a little brisker than real time,
+// so the ad spends its seconds on the part a viewer came for. Both directions are needed:
+// the pictures step forward through `appAt`, the recorded pointer comes back through `adAt`.
+const SETUP = captures.marks.main; // app frames up to the main window
+const SETUP_SPEED = 1.25;
+const SETUP_AD = SETUP / SETUP_SPEED;
+export const appAt = (t: number) => (t < SETUP_AD ? t * SETUP_SPEED : SETUP + (t - SETUP_AD));
+export const adAt = (a: number) => (a < SETUP ? a / SETUP_SPEED : SETUP_AD + (a - SETUP));
+
+export const APP_FRAMES = Math.ceil(adAt(captures.frames.length));
 
 export const LINE1 = 0; // "Do you want a simple downloader?"
 export const LINE2 = 60; // "That supports 1,000+ websites?"
 export const LINE3 = 132; // "Here is lovelyDL."
 export const REVEAL = 194; // the dark stage opens onto the desktop
 export const HANDOFF = REVEAL + 24; // the flying icon lands as the desktop shortcut
-export const APP = 256; // first frame of the recorded app
+export const POINT = HANDOFF + 6; // the pointer starts its arc towards the shortcut
+export const OPEN = POINT + 30; // it arrives, and double-clicks
+export const APP = OPEN + 40; // the window has finished growing: the recording runs
 export const APP_END = APP + APP_FRAMES;
-export const FEATURES = APP_END + 4;
-export const BEAT = 50;
+export const FEATURES = APP_END + 2;
+export const BEAT = 54;
 export const END = FEATURES + 3 * BEAT;
-export const TOTAL = END + 100;
+export const TOTAL = END + 96;

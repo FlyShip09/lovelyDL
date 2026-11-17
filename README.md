@@ -14,6 +14,12 @@
   <img src="https://img.shields.io/badge/built%20with-Tauri%202%20%2B%20Rust-24C8DB" alt="Built with Tauri 2 and Rust">
 </p>
 
+<p align="center">
+  <img src="docs/promo/lovelydl-ad.gif" width="800" alt="Opening lovelyDL from the desktop, installing the tools it needs, then pasting a link and downloading three files">
+</p>
+
+<p align="center"><a href="docs/promo/lovelydl-ad.mp4">Watch the half-minute film</a></p>
+
 lovelyDL is a desktop app (a GUI) for [yt-dlp](https://github.com/yt-dlp/yt-dlp), so it
 works with the 1,000+ sites yt-dlp supports. It adds what a command line cannot: a preview
 before anything is saved, a queue that survives restarts, presets that say what they

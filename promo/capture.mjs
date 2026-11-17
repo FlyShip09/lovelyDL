@@ -362,7 +362,8 @@ assert(pictures.size < 420, `Too many distinct frames to commit (${pictures.size
 // Lossless WebP: flat interface pixels pack smaller than PNG, with the window's round corners.
 execFileSync(
   "ffmpeg",
-  ["-v", "error", "-y", "-i", `${RAW}u%04d.png`, "-c:v", "libwebp", "-lossless", "1", "-compression_level", "6", `${PUB}app/u%04d.webp`],
+  // -start_number 0: the image muxer would otherwise number from one and shift every picture.
+  ["-v", "error", "-y", "-i", `${RAW}u%04d.png`, "-c:v", "libwebp", "-lossless", "1", "-compression_level", "6", "-start_number", "0", `${PUB}app/u%04d.webp`],
   { stdio: "inherit" },
 );
 

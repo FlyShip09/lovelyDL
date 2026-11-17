@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Concept A: a play triangle turned to point down, resting on a tray line. Play + save. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FF7A8A"/>
+      <stop offset="1" stop-color="#E5405E"/>
+    </linearGradient>
+    <linearGradient id="fg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#FFE9EE"/>
+    </linearGradient>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#bg)"/>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="none" stroke="#000" stroke-opacity=".08" stroke-width="2"/>
+  <path d="M361 344 Q330 344 346 371 L486 611 Q512 655 538 611 L678 371 Q694 344 663 344 Z" fill="url(#fg)"/>
+  <rect x="352" y="684" width="320" height="44" rx="22" fill="url(#fg)"/>
+</svg>

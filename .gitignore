@@ -20,6 +20,9 @@ Thumbs.db
 *.pem
 .env
 .env.*
+# Promo video: the captured PNGs and the renders are rebuilt, only the packed frames ship
+/promo/captures-raw/
+/promo/out/
 # Local dev scratch
 /.dev/
 /src-tauri/gen/
