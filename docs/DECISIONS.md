@@ -237,3 +237,19 @@ All run with yt-dlp 2026.10.26 on this PC.
   (`title`). Chromium also reports a `title` as UI Automation help text, so Narrator can
   repeat it at high verbosity; a custom tooltip would avoid that but is not worth its cost.
 
+## 2026-11-17 · CI and releases on Windows runners only
+
+- The app is Windows-only, so CI and releases run on `windows-latest`. Releases are drafts:
+  publishing stays a manual step for the owner.
+- Signing is conditional. Without `WINDOWS_CERTIFICATE` the installer is unsigned and
+  SmartScreen warns on first run (README explains the steps). Without
+  `TAURI_SIGNING_PRIVATE_KEY` no updater files are made, and a build without
+  `LOVELYDL_UPDATER_PUBKEY` reports that updates are not set up.
+- winget replaces the Homebrew cask from the macOS plan; a manifest template is in
+  `packaging/winget/`.
+
+## 2026-11-17 · No settings import
+
+- The brief says imported settings may never set custom yt-dlp arguments. There is no
+  settings import, so nothing can; SECURITY.md does not claim the feature.
+

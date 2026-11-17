@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.100.0
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # tauri-build needs the frontend folder to exist; the real build happens in `ui`.
+      - run: npm ci
+      - run: npm run build
+      - name: Formatting
+        run: cargo fmt --all --check
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      # real_tools.rs skips itself here: it needs yt-dlp and ffmpeg on PATH and the network.
+      - name: Tests
+        run: cargo test --workspace
+      - name: Generated TypeScript bindings are committed
+        shell: bash
+        run: git diff --exit-code -- ui/src/ipc/bindings.ts
+
+  ui:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Types
+        run: npm run typecheck
+      - name: Lint and formatting
+        run: npm run lint
+      - name: Unit tests
+        run: npm test
+      - name: Install Playwright's Chromium (WebView2 is Chromium)
+        run: npx playwright install --with-deps chromium
+      - name: Screens, accessibility and interactions
+        run: npm run e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: |
+            docs/screenshots/mock
+            ui/test-results
+          retention-days: 7
+
+  build:
+    runs-on: windows-latest
+    needs: [rust, ui]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.100.0
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build the installer
+        run: npx tauri build --ci
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lovelyDL-installer
+          path: target/release/bundle/nsis/*.exe
+          retention-days: 14

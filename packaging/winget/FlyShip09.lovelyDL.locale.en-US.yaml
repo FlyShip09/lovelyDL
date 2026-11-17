@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.10.0.schema.json
+PackageIdentifier: FlyShip09.lovelyDL
+PackageVersion: VERSION
+PackageLocale: en-US
+Publisher: FlyShip09
+PublisherUrl: https://github.com/FlyShip09
+PackageName: lovelyDL
+PackageUrl: https://github.com/FlyShip09/lovelyDL
+License: GPL-3.0-or-later
+LicenseUrl: https://github.com/FlyShip09/lovelyDL/blob/main/LICENSE
+ShortDescription: A calm, native-feeling video and audio downloader built on yt-dlp.
+Description: Paste a link, see what you will get, press Download. lovelyDL wraps yt-dlp in a quiet window with a queue that survives restarts, presets, playlist selection and a searchable history.
+Tags:
+  - downloader
+  - video
+  - audio
+  - yt-dlp
+ReleaseNotesUrl: https://github.com/FlyShip09/lovelyDL/releases/tag/vVERSION
+ManifestType: defaultLocale
+ManifestVersion: 1.10.0

@@ -1,0 +1,84 @@
+name: Release
+
+# Push a tag like v0.2.0 to build a draft release. See docs/RELEASING.md.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    env:
+      # Baked into the app so it can verify its own updates. Empty means "no updater".
+      LOVELYDL_UPDATER_PUBKEY: ${{ secrets.LOVELYDL_UPDATER_PUBKEY }}
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+      WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+      WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.100.0
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Import the code-signing certificate (only when the secrets exist)
+        if: env.WINDOWS_CERTIFICATE != '' && env.WINDOWS_CERTIFICATE_PASSWORD != ''
+        shell: pwsh
+        run: |
+          $pfx = Join-Path $env:RUNNER_TEMP "lovelydl.pfx"
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
+          $cert = Import-PfxCertificate -FilePath $pfx -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force)
+          Remove-Item $pfx
+          # Tauri signs the app and the installer with this certificate.
+          $config = @{ bundle = @{ windows = @{ certificateThumbprint = $cert.Thumbprint; digestAlgorithm = "sha256"; timestampUrl = "http://timestamp.digicert.com" } } } | ConvertTo-Json -Depth 5
+          Set-Content -Path src-tauri/tauri.signing.json -Value $config
+
+      - name: Build
+        shell: pwsh
+        run: |
+          $configs = @()
+          if (Test-Path src-tauri/tauri.signing.json) { $configs += "--config"; $configs += "src-tauri/tauri.signing.json" }
+          # Updater artifacts only when the updater key is available.
+          if ($env:TAURI_SIGNING_PRIVATE_KEY) {
+            Set-Content -Path src-tauri/tauri.updater.json -Value '{ "bundle": { "createUpdaterArtifacts": true } }'
+            $configs += "--config"; $configs += "src-tauri/tauri.updater.json"
+          }
+          npx tauri build --ci @configs
+
+      - name: Collect the release files
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          $out = New-Item -ItemType Directory -Force -Path dist-release
+          $installer = Get-ChildItem target/release/bundle/nsis/*.exe | Select-Object -First 1
+          Copy-Item $installer.FullName (Join-Path $out "lovelyDL_${version}_x64-setup.exe")
+          $sig = Get-ChildItem target/release/bundle/nsis/*.exe.sig -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($sig) {
+            $signature = Get-Content $sig.FullName -Raw
+            $manifest = @{
+              version = $version
+              notes = "See https://github.com/FlyShip09/lovelyDL/releases/tag/v$version"
+              pub_date = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+              platforms = @{ "windows-x86_64" = @{ signature = $signature.Trim(); url = "https://github.com/FlyShip09/lovelyDL/releases/download/v$version/lovelyDL_${version}_x64-setup.exe" } }
+            } | ConvertTo-Json -Depth 5
+            Set-Content -Path (Join-Path $out "latest.json") -Value $manifest
+          }
+          Get-ChildItem $out -File | ForEach-Object {
+            "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name
+          } | Set-Content -Path (Join-Path $out "SHA2-256SUMS")
+
+      - name: Draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          gh release create "$tag" dist-release/* --draft --title "lovelyDL ${tag#v}" --notes-file CHANGELOG.md

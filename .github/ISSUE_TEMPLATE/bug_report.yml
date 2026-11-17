@@ -1,0 +1,28 @@
+name: Something does not work
+description: A download fails, the app misbehaves, or something looks wrong.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. If a download failed, the row's **Copy details** button
+        copies the versions, the command and the log with personal data removed; paste it
+        below. Leave out links you do not want to share.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Paste Copy details here, or the versions from Settings › Components.
+      render: text
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: Windows 11 24H2
