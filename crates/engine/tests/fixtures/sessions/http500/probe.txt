@@ -1,0 +1,3 @@
+# Recorded from yt-dlp by fake-ytdlp. Mode: probe.
+err ERROR: [generic] 500: Unable to download webpage: HTTP Error 500: Internal Server Error (caused by <HTTPError 500: Internal Server Error>)
+exit 1

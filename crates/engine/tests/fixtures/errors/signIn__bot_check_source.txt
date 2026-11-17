@@ -1,0 +1,2 @@
+# Not captured: message text from yt-dlp 2026.10.26 source (extractor/youtube/_video.py, sign-in branch).
+ERROR: [youtube] abc123: Sign in to confirm you’re not a bot. Use --cookies-from-browser or --cookies for the authentication. See  https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp  for how to manually pass cookies.

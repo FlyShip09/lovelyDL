@@ -120,3 +120,36 @@ All run with yt-dlp 2026.10.26 on this PC.
   items with the default preset; each is probed in the queue.
 - **Why.** The brief says several links create several items; a stack of preview cards would
   ask the user to confirm formats one by one, which is not what a multi-paste is for.
+
+## 2026-11-17 · yt-dlp needs `--encoding utf-8` on Windows
+
+- Writing to a pipe, yt-dlp on Windows uses the console code page (cp1252 here) and drops
+  characters it cannot encode: a title "Élan – ねこ" came out as "Élan – " with the rest lost.
+  `PYTHONIOENCODING` and `PYTHONUTF8` had no effect on the frozen executable; `--encoding
+  utf-8` fixed it (checked byte by byte). Every invocation passes it.
+
+## 2026-11-17 · The per-site limit counts by the link's host
+
+- The first version counted by the extractor's site name, which only exists after the probe
+  and differs from the link's host, so a site could briefly run more jobs than its limit (a
+  test caught 3 against a limit of 1). The link's host is known up front and never changes.
+
+## 2026-11-17 · Change batching never drops a state change
+
+- Progress is coalesced to the newest value per job inside each 100 ms window. A job update
+  replaces an earlier one only when both carry the same state, so the UI sees every
+  transition it animates (Completed, Failed) even when they happen within one window.
+
+## 2026-11-17 · fake-ytdlp is configured by a file next to it
+
+- Tests copy fake-ytdlp to a temp folder as `yt-dlp.exe`, `ffmpeg.exe` and `deno.exe` and
+  write `fake-ytdlp.env` beside them. Environment variables would leak between tests that run
+  in parallel in one process. Fixtures are picked by the link (`https://fake.test/<name>`).
+- The tests ask cargo for the fake's path (`--message-format=json`): cargo 1.100 no longer
+  puts test binaries in `target/debug/deps`, so a path computed from the test binary breaks.
+
+## 2026-11-17 · A single link that fails to probe stays in the preview
+
+- With "download straight away" on, one link still goes through the probe first; if the probe
+  fails there is no queue row, the preview shows the error, its fix and Copy Details. Several
+  links at once go to the queue, where each failure is a row.

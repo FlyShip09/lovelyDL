@@ -1,0 +1,2 @@
+# Not captured: message text from yt-dlp 2026.10.26 source (YouTube playability reason relayed by the extractor).
+ERROR: [youtube] abc123: Join this channel to get access to members-only content like this video, and other exclusive perks.

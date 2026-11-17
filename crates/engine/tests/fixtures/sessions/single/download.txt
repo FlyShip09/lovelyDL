@@ -1,0 +1,18 @@
+# Recorded from yt-dlp by fake-ytdlp. Mode: download.
+err @@lovelydl@@PP {"status": "started", "postprocessor": "ThumbnailsConvertor", "_default_template": "ThumbnailsConvertor started"}
+err @@lovelydl@@PP {"status": "finished", "postprocessor": "ThumbnailsConvertor", "_default_template": "ThumbnailsConvertor finished"}
+out @@lovelydl@@DL {"fid":"140","vcodec":"none","acodec":"mp4a.40.2","p":{"status": "downloading", "downloaded_bytes": 1024, "total_bytes": 2430774, "tmpfilename": "{temp}\\Caminandes 3\uff1a Llamigos [SkVqJ1SGeL0].m4a.part", "filename": "{temp}\\Caminandes 3\uff1a Llamigos [SkVqJ1SGeL0].m4a", "eta": 3, "speed": 663212.9857936999, "elapsed": 0.2267918586730957, "ctx_id": null, "_eta_str": "00:03", "_speed_str": " 647.67KiB/s", "_percent": 0.042126499625222254, "_percent_str": "  0.0%", "_total_bytes_str": "   2.32MiB", "_total_bytes_estimate_str": "       N/A", "_downloaded_bytes_str": "   1.00KiB", "_elapsed_str": "00:00:00", "_default_template": "  0.0% of    2.32MiB at  647.67KiB/s ETA 00:03"}}
+out @@lovelydl@@DL {"fid":"140","vcodec":"none","acodec":"mp4a.40.2","p":{"status": "downloading", "downloaded_bytes": 130048, "total_bytes": 2430774, "tmpfilename": "{temp}\\Caminandes 3\uff1a Llamigos [SkVqJ1SGeL0].m4a.part", "filename": "{temp}\\Caminandes 3\uff1a Llamigos [SkVqJ1SGeL0].m4a", "eta": 0, "speed": 3650227.840034263, "elapsed": 0.26087522506713867, "ctx_id": null, "_eta_str": "00:00", "_speed_str": "   3.48MiB/s", "_percent": 5.350065452403227, "_percent_str": "  5.4%", "_total_bytes_str": "   2.32MiB", "_total_bytes_estimate_str": "       N/A", "_downloaded_bytes_str": " 127.00KiB", "_elapsed_str": "00:00:00", "_default_template": "  5.4% of    2.32MiB at    3.48MiB/s ETA 00:00"}}
+out @@lovelydl@@DL {"fid":"140","vcodec":"none","acodec":"mp4a.40.2","p":{"downloaded_bytes": 2430774, "total_bytes": 2430774, "filename": "{temp}\\Caminandes 3\uff1a Llamigos [SkVqJ1SGeL0].m4a", "status": "finished", "elapsed": 0.3146185874938965, "ctx_id": null, "speed": 7726097.874135159, "_speed_str": "7.37MiB/s", "_total_bytes_str": "   2.32MiB", "_elapsed_str": "00:00:00", "_percent": 100.0, "_percent_str": "100.0%", "_default_template": "100% of    2.32MiB in 00:00:00 at 7.37MiB/s"}}
+err @@lovelydl@@PP {"status": "started", "postprocessor": "FixupM4a", "_default_template": "FixupM4a started"}
+err @@lovelydl@@PP {"status": "finished", "postprocessor": "FixupM4a", "_default_template": "FixupM4a finished"}
+err @@lovelydl@@PP {"status": "started", "postprocessor": "ExtractAudio", "_default_template": "ExtractAudio started"}
+err @@lovelydl@@PP {"status": "finished", "postprocessor": "ExtractAudio", "_default_template": "ExtractAudio finished"}
+err @@lovelydl@@PP {"status": "started", "postprocessor": "Metadata", "_default_template": "Metadata started"}
+err @@lovelydl@@PP {"status": "finished", "postprocessor": "Metadata", "_default_template": "Metadata finished"}
+err @@lovelydl@@PP {"status": "started", "postprocessor": "EmbedThumbnail", "_default_template": "EmbedThumbnail started"}
+err @@lovelydl@@PP {"status": "finished", "postprocessor": "EmbedThumbnail", "_default_template": "EmbedThumbnail finished"}
+err @@lovelydl@@PP {"status": "started", "postprocessor": "MoveFiles", "_default_template": "MoveFiles started"}
+err @@lovelydl@@PP {"status": "finished", "postprocessor": "MoveFiles", "_default_template": "MoveFiles finished"}
+out @@lovelydl@@FILE "{home}\\Caminandes 3\uff1a Llamigos [SkVqJ1SGeL0].m4a"
+exit 0

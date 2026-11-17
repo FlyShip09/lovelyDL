@@ -1,0 +1,2 @@
+# Not captured: message text from yt-dlp 2026.10.26 source (extractor/common.py raise_geo_restricted).
+ERROR: [generic] abc123: This video is not available from your location due to geo restriction

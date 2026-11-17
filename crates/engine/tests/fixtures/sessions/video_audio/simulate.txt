@@ -1,0 +1,3 @@
+# Real yt-dlp output for `-t mp4 -S res:720` on this video (see docs/DECISIONS.md).
+out {"top":{"format_id": "136+140", "ext": "mp4", "width": 1280, "height": 720, "fps": 24, "vcodec": "avc1.4D401F", "acodec": "mp4a.40.2", "filesize_approx": 14017680, "tbr": 747.319, "duration": 150},"parts":[{"format_id": "136", "filesize": 11586906, "filesize_approx": 11586897, "tbr": 617.799, "vcodec": "avc1.4D401F", "acodec": "none", "height": 720, "fps": 24}, {"format_id": "140", "filesize": 2430774, "filesize_approx": 2430766, "tbr": 129.52, "vcodec": "none", "acodec": "mp4a.40.2"}]}
+exit 0

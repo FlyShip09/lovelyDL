@@ -1,0 +1,14 @@
+# Recorded from yt-dlp by fake-ytdlp. Mode: download.
+err @@lovelydl@@PP {"status": "started", "postprocessor": "ThumbnailsConvertor", "_default_template": "ThumbnailsConvertor started"}
+err @@lovelydl@@PP {"status": "finished", "postprocessor": "ThumbnailsConvertor", "_default_template": "ThumbnailsConvertor finished"}
+out @@lovelydl@@DL {"fid":"mp4","vcodec":null,"acodec":null,"p":{"status": "downloading", "downloaded_bytes": 1024, "total_bytes": null, "tmpfilename": "{temp}\\chunked [chunked].mp4.part", "filename": "{temp}\\chunked [chunked].mp4", "eta": null, "speed": null, "elapsed": 0.0200958251953125, "ctx_id": null, "_eta_str": "Unknown", "_speed_str": " Unknown B/s", "_percent": false, "_percent_str": "  0.0%", "_total_bytes_str": "       N/A", "_total_bytes_estimate_str": "       N/A", "_downloaded_bytes_str": "   1.00KiB", "_elapsed_str": "00:00:00", "_default_template": "   1.00KiB at  Unknown B/s (00:00:00)"}}
+out @@lovelydl@@DL {"fid":"mp4","vcodec":null,"acodec":null,"p":{"status": "downloading", "downloaded_bytes": 16437, "total_bytes": null, "tmpfilename": "{temp}\\chunked [chunked].mp4.part", "filename": "{temp}\\chunked [chunked].mp4", "eta": null, "speed": 65321.77284071335, "elapsed": 0.2713296413421631, "ctx_id": null, "_eta_str": "Unknown", "_speed_str": "  63.79KiB/s", "_percent": false, "_percent_str": "  0.0%", "_total_bytes_str": "       N/A", "_total_bytes_estimate_str": "       N/A", "_downloaded_bytes_str": "  16.05KiB", "_elapsed_str": "00:00:00", "_default_template": "  16.05KiB at   63.79KiB/s (00:00:00)"}}
+out @@lovelydl@@DL {"fid":"mp4","vcodec":null,"acodec":null,"p":{"downloaded_bytes": 16437, "total_bytes": 16437, "filename": "{temp}\\chunked [chunked].mp4", "status": "finished", "elapsed": 0.2731039524078369, "ctx_id": null, "speed": 60185.87374910627, "_speed_str": "58.78KiB/s", "_total_bytes_str": "  16.05KiB", "_elapsed_str": "00:00:00", "_percent": 100.0, "_percent_str": "100.0%", "_default_template": "100% of   16.05KiB in 00:00:00 at 58.78KiB/s"}}
+err @@lovelydl@@PP {"status": "started", "postprocessor": "Metadata", "_default_template": "Metadata started"}
+err @@lovelydl@@PP {"status": "finished", "postprocessor": "Metadata", "_default_template": "Metadata finished"}
+err @@lovelydl@@PP {"status": "started", "postprocessor": "EmbedThumbnail", "_default_template": "EmbedThumbnail started"}
+err @@lovelydl@@PP {"status": "finished", "postprocessor": "EmbedThumbnail", "_default_template": "EmbedThumbnail finished"}
+err @@lovelydl@@PP {"status": "started", "postprocessor": "MoveFiles", "_default_template": "MoveFiles started"}
+err @@lovelydl@@PP {"status": "finished", "postprocessor": "MoveFiles", "_default_template": "MoveFiles finished"}
+out @@lovelydl@@FILE "{home}\\chunked [chunked].mp4"
+exit 0

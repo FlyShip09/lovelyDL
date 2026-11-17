@@ -1,0 +1,5 @@
+# Recorded from yt-dlp by fake-ytdlp. Mode: download.
+err @@lovelydl@@PP {"status": "started", "postprocessor": "ThumbnailsConvertor", "_default_template": "ThumbnailsConvertor started"}
+err @@lovelydl@@PP {"status": "finished", "postprocessor": "ThumbnailsConvertor", "_default_template": "ThumbnailsConvertor finished"}
+err ERROR: unable to download video data: HTTP Error 403: Forbidden
+exit 1

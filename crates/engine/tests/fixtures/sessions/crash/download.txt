@@ -1,0 +1,3 @@
+# Written by hand: one real progress line, then the process dies without a word.
+out @@lovelydl@@DL {"fid":"mp4","vcodec":null,"acodec":null,"p":{"status": "downloading", "downloaded_bytes": 1024, "total_bytes": 16437, "tmpfilename": "{temp}\\ok [ok].mp4.part", "filename": "{temp}\\ok [ok].mp4", "eta": null, "speed": null, "elapsed": 0.009579181671142578, "ctx_id": null, "_eta_str": "Unknown", "_speed_str": " Unknown B/s", "_percent": 6.229847295735231, "_percent_str": "  6.2%", "_total_bytes_str": "  16.05KiB", "_total_bytes_estimate_str": "       N/A", "_downloaded_bytes_str": "   1.00KiB", "_elapsed_str": "00:00:00", "_default_template": "  6.2% of   16.05KiB at  Unknown B/s ETA Unknown"}}
+crash

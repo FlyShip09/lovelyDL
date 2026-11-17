@@ -1,0 +1,3 @@
+# Recorded from yt-dlp by fake-ytdlp. Mode: download.
+err ERROR: [youtube] SkVqJ1SGeL0: Requested format is not available. Use --list-formats for a list of available formats
+exit 1

@@ -1,0 +1,3 @@
+WARNING: ffmpeg-location C:\nonexistent-ffmpeg does not exist! Continuing without ffmpeg
+WARNING: You have requested merging of multiple formats but ffmpeg is not installed. The formats won't be merged
+WARNING: File "C:\Users\USER\AppData\Local\Temp\claude\930f00460b7b4598\20305eb1-551c-4a05-a914-384eaeacd32a\scratchpad\errors\t1\Caminandes 3 Llamigos [SkVqJ1SGeL0].mp4" cannot be found

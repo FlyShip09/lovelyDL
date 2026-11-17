@@ -1,0 +1,15 @@
+[package]
+name = "fake-ytdlp"
+description = "Test double for yt-dlp: replays recorded output, and records it from the real tool."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+serde_json.workspace = true

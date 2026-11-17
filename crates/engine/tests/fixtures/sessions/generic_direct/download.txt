@@ -1,0 +1,13 @@
+# Recorded from yt-dlp by fake-ytdlp. Mode: download.
+err @@lovelydl@@PP {"status": "started", "postprocessor": "ThumbnailsConvertor", "_default_template": "ThumbnailsConvertor started"}
+err @@lovelydl@@PP {"status": "finished", "postprocessor": "ThumbnailsConvertor", "_default_template": "ThumbnailsConvertor finished"}
+out @@lovelydl@@DL {"fid":"mp4","vcodec":null,"acodec":null,"p":{"status": "downloading", "downloaded_bytes": 1024, "total_bytes": 16437, "tmpfilename": "{temp}\\ok [ok].mp4.part", "filename": "{temp}\\ok [ok].mp4", "eta": null, "speed": null, "elapsed": 0.009579181671142578, "ctx_id": null, "_eta_str": "Unknown", "_speed_str": " Unknown B/s", "_percent": 6.229847295735231, "_percent_str": "  6.2%", "_total_bytes_str": "  16.05KiB", "_total_bytes_estimate_str": "       N/A", "_downloaded_bytes_str": "   1.00KiB", "_elapsed_str": "00:00:00", "_default_template": "  6.2% of   16.05KiB at  Unknown B/s ETA Unknown"}}
+out @@lovelydl@@DL {"fid":"mp4","vcodec":null,"acodec":null,"p":{"downloaded_bytes": 16437, "total_bytes": 16437, "filename": "{temp}\\ok [ok].mp4", "status": "finished", "elapsed": 0.010938882827758789, "ctx_id": null, "speed": 1502621.4521915389, "_speed_str": "1.43MiB/s", "_total_bytes_str": "  16.05KiB", "_elapsed_str": "00:00:00", "_percent": 100.0, "_percent_str": "100.0%", "_default_template": "100% of   16.05KiB in 00:00:00 at 1.43MiB/s"}}
+err @@lovelydl@@PP {"status": "started", "postprocessor": "Metadata", "_default_template": "Metadata started"}
+err @@lovelydl@@PP {"status": "finished", "postprocessor": "Metadata", "_default_template": "Metadata finished"}
+err @@lovelydl@@PP {"status": "started", "postprocessor": "EmbedThumbnail", "_default_template": "EmbedThumbnail started"}
+err @@lovelydl@@PP {"status": "finished", "postprocessor": "EmbedThumbnail", "_default_template": "EmbedThumbnail finished"}
+err @@lovelydl@@PP {"status": "started", "postprocessor": "MoveFiles", "_default_template": "MoveFiles started"}
+err @@lovelydl@@PP {"status": "finished", "postprocessor": "MoveFiles", "_default_template": "MoveFiles finished"}
+out @@lovelydl@@FILE "{home}\\ok [ok].mp4"
+exit 0

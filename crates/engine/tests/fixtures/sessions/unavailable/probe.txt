@@ -1,0 +1,3 @@
+# Recorded from yt-dlp by fake-ytdlp. Mode: probe.
+err ERROR: [youtube] BaW_jenozKc: This video is unavailable
+exit 1

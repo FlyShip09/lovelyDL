@@ -1,0 +1,2 @@
+# Not captured: message text from yt-dlp 2026.10.26 source (extractor/common.py raise_login_required).
+ERROR: [vimeo] 123: This video is only available for registered users. Use --cookies-from-browser or --cookies for the authentication.
