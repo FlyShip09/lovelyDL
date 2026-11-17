@@ -5,7 +5,7 @@
 The first version.
 
 - Add links by pasting anywhere, typing, dragging from a browser, a `lovelydl://` link, or
-  the bookmarklet. The app notices a link you just copied.
+  the bookmarklet. Optionally, the app notices a link you just copied.
 - A preview with title, length, size and the exact resolution before anything is saved.
 - Presets: Best, Compatible MP4, 2160p to 480p caps, and M4A, MP3, Opus or FLAC audio; an
   Advanced format picker.

@@ -12,6 +12,12 @@
   <img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" alt="License: GPL-3.0-or-later">
   <img src="https://img.shields.io/badge/platform-Windows-0078D4" alt="Platform: Windows">
   <img src="https://img.shields.io/badge/built%20with-Tauri%202%20%2B%20Rust-24C8DB" alt="Built with Tauri 2 and Rust">
+  <a href="https://github.com/FlyShip09/lovelyDL/releases/latest"><img src="https://img.shields.io/github/v/release/FlyShip09/lovelyDL?label=download" alt="Latest release"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/FlyShip09/lovelyDL/releases/latest"><b>Download for Windows</b></a>
+  &nbsp;·&nbsp; free, about 5 MB, no account
 </p>
 
 <p align="center">
@@ -65,18 +71,20 @@ paywalls, and it does not help anyone do so.
 
 ## Install
 
-Installers are published on the
-[Releases](https://github.com/FlyShip09/lovelyDL/releases) page as
-`lovelyDL_x.y.z_x64-setup.exe`. If no release is listed there yet, build it yourself with
-the three commands under [Build from source](#build-from-source). The installer is for the
-current user only and needs no administrator rights. It is built and tested on Windows 11;
-Windows 10 should work but has not been tested. The setup installs WebView2 if it is missing.
+Get the installer, `lovelyDL_x.y.z_x64-setup.exe`, from the
+[latest release](https://github.com/FlyShip09/lovelyDL/releases/latest) and run it. It
+installs for the current user only and needs no administrator rights. It is built and tested
+on Windows 11; Windows 10 should work but has not been tested. The setup installs WebView2
+if it is missing.
 
-Each release lists SHA-256 sums in `SHA2-256SUMS`. To check your download:
+Each release lists SHA-256 sums in `SHA2-256SUMS`. To check your download, compare the
+output of this with the sum listed there:
 
 ```powershell
 Get-FileHash .\lovelyDL_0.1.0_x64-setup.exe -Algorithm SHA256
 ```
+
+On Linux, macOS or WSL, `sha256sum -c SHA2-256SUMS` does the comparison for you.
 
 **"Windows protected your PC."** Until releases are code-signed, Microsoft Defender
 SmartScreen shows this for new downloads. Click **More info**, check that the publisher and

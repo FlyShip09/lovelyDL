@@ -79,9 +79,12 @@ jobs:
             } | ConvertTo-Json -Depth 5
             Set-Content -Path (Join-Path $out "latest.json") -Value $manifest
           }
-          Get-ChildItem $out -File | ForEach-Object {
+          # LF line endings, so `sha256sum -c SHA2-256SUMS` works on Linux, macOS and WSL too;
+          # Set-Content would write CRLF and every name would end in a stray carriage return.
+          $sums = Get-ChildItem $out -File | ForEach-Object {
             "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name
-          } | Set-Content -Path (Join-Path $out "SHA2-256SUMS")
+          }
+          [IO.File]::WriteAllText((Join-Path $out "SHA2-256SUMS"), (($sums -join "`n") + "`n"))
 
       - name: Draft release
         env:
@@ -89,4 +92,6 @@ jobs:
         shell: bash
         run: |
           tag="${GITHUB_REF_NAME}"
-          gh release create "$tag" dist-release/* --draft --title "lovelyDL ${tag#v}" --notes-file CHANGELOG.md
+          # Only this version's section of the changelog, without the file's own heading.
+          awk -v head="## ${tag#v}" 'index($0, head) == 1 { on = 1; next } on && /^## / { exit } on' CHANGELOG.md > notes.md
+          gh release create "$tag" dist-release/* --draft --title "lovelyDL ${tag#v}" --notes-file notes.md

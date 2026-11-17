@@ -349,6 +349,26 @@ A render loop slipped in with that line: the selector built a fresh object every
 whole app re-rendered forever. The browser suite caught it at once; the selector is now
 shallow-compared.
 
+## v0.1.0 · Released — 2026-11-17
+
+Tagged on `9aa86e2` after CI passed on that exact commit; the release workflow built the
+installer on GitHub's Windows runner and opened a draft.
+
+| What | Checked how |
+|---|---|
+| The installer | Downloaded from the draft: a valid Windows executable that names itself lovelyDL 0.1.0, 5,090,763 bytes, SHA-256 `64396a36…` matching `SHA2-256SUMS` |
+| The published download | After publishing, fetched anonymously from `releases/latest/download/…` and verified with `sha256sum -c` |
+| The ad | 33.1 s, 1920×1080, 4.8 MB; reviewed on a contact sheet of 15 frames across the film plus a full-resolution crop; GIF and social card checked |
+
+Fixed on the way: `SHA2-256SUMS` was written with CRLF line endings, so `sha256sum -c` on
+Linux, macOS and WSL reported a false failure. The workflow now writes LF, and the 0.1.0 asset
+was replaced with an identical LF copy. Release notes now take only the version's own section
+of the changelog.
+
+Not verified: the installer was not run on this PC, since that installs the app system-wide
+for this user. The same build was installed and run through `tauri build` locally in M8, but
+not this exact file. It is unsigned, so SmartScreen warns once (the notes explain the step).
+
 ## Next
 
 Nothing planned. Open decisions for the owner are in the final report: code signing,
