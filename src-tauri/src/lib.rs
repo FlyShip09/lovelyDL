@@ -5,6 +5,7 @@ mod commands;
 pub mod platform;
 mod shell;
 mod strings;
+mod tray;
 mod windows;
 
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
@@ -32,6 +33,8 @@ pub struct AppState {
     /// Clipboard sequence number already offered (or dismissed), so an offer is made once.
     pub clipboard_seen: AtomicU32,
     pub(crate) focused: AtomicBool,
+    /// The tray icon is on: closing the window hides it instead of quitting.
+    pub(crate) tray: AtomicBool,
     quitting: AtomicBool,
 }
 
@@ -194,6 +197,13 @@ pub(crate) async fn quit(app: AppHandle) {
 }
 
 fn on_main_close(app: &AppHandle) {
+    if app.state::<AppState>().tray.load(Ordering::Relaxed) {
+        // With the tray icon on, lovelyDL keeps running there.
+        if let Some(window) = app.get_webview_window("main") {
+            let _ = window.hide();
+        }
+        return;
+    }
     let app = app.clone();
     tauri::async_runtime::spawn(async move {
         let active = app.state::<AppState>().engine.active_count().await;
@@ -287,6 +297,7 @@ fn setup(app: &mut tauri::App, specta: &tauri_specta::Builder<Wry>) -> anyhow::R
         update: Mutex::new(None),
         clipboard_seen: AtomicU32::new(platform::clipboard_sequence()),
         focused: AtomicBool::new(false),
+        tray: AtomicBool::new(false),
         quitting: AtomicBool::new(false),
     });
     windows::create_main(app.handle(), &system)?;

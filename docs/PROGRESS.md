@@ -152,7 +152,35 @@ Not verified, and why:
 - Sections on the Internet Archive fail inside ffmpeg ("Error opening input: I/O error") with
   plain yt-dlp too; not a lovelyDL issue.
 
+## M5 · Settings, onboarding, components — done
+
+Built in this milestone: the system tray mini queue (the Windows counterpart of the menu bar
+extra: up to five downloads with their progress, Show, Pause all, Resume all, Quit; left-click
+shows the window; with it on, closing the window hides it), the update banner, and
+`docs/RELEASING.md` (updater keys and code signing, nothing generated or committed).
+
+Verified in the real app (test home, `LOVELYDL_HOME`):
+
+| What | How |
+|---|---|
+| Onboarding and real tool installs | Done by the owner on the real profile: yt-dlp 2026.10.26 and Deno 2.9.8 from GitHub, SHA-256 matching the published sums, ffmpeg found on PATH |
+| Settings window | Opens from the toolbar; captured in `docs/screenshots/app/settings.png`. Fixed: it hung at `about:blank` because a synchronous command built the window, which deadlocks on Windows |
+| Notice copied links | A link on the clipboard plus bringing the window forward showed "You copied a link."; Add it opened the preview. The page itself never saw the clipboard text before the click |
+| Tray icon | With the setting on, closing the window hid it (process alive, taskbar button gone); the icon sits in the tray overflow with the "lovelyDL" tooltip |
+| Deep link | `lovelydl://download?url=…&preset=mp3` brought the hidden window back with a preview set to MP3, started nothing, and stayed one process |
+| Single instance | A second launch with a web link handed it over and exited |
+| Updater without a key | Says "Updates are not set up for this build"; the banner stays quiet |
+| Components install, update, rollback | Integration tests against a local server (M1) and the real install above |
+
+Not verified, and why:
+
+- **Tray menu commands** (Pause all, Quit from the tray): clicking a tray menu needs real
+  pointer input on the notification area; the commands reuse the engine calls tested in M1.
+- **Updater with a real key and release**: needs the signing key and a published release,
+  both of which need the owner (see RELEASING.md).
+- The bookmarklet is the same `lovelydl://` link verified above.
+
 ## Next
 
-M5: settings, onboarding and components in the real app, clipboard, deep links, tray,
-updater wiring.
+M6: motion and polish (choreography, signature element under Reduce Motion, drag-out,
+keep-awake), VoiceOver-equivalent (Narrator) pass, performance numbers, copy review.

@@ -314,9 +314,10 @@ pub async fn quit(app: AppHandle) -> Res<()> {
     Ok(())
 }
 
+/// Async on purpose: building a window inside a synchronous command deadlocks on Windows.
 #[tauri::command]
 #[specta::specta]
-pub fn open_settings(app: AppHandle) -> Res<()> {
+pub async fn open_settings(app: AppHandle) -> Res<()> {
     windows::open_settings(&app).map_err(|e| e.to_string())
 }
 

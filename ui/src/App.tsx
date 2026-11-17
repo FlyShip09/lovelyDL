@@ -9,6 +9,7 @@ import { ClipboardBannerView as ClipboardBanner, DropOverlay } from "./features/
 import { Sheets } from "./features/shell/Sheets";
 import { Sidebar } from "./features/shell/Sidebar";
 import { Toolbar } from "./features/shell/Toolbar";
+import { UpdateBanner } from "./features/shell/UpdateBanner";
 import { useGlobalInput } from "./features/shell/useGlobalInput";
 import { smooth } from "./motion/tokens";
 import { useApp, useConnection } from "./store/app";
@@ -47,6 +48,7 @@ export function App() {
         <Toolbar sidebarVisible={sidebar} />
         <div className={styles.content}>
           <ClipboardBanner />
+          <UpdateBanner />
           {view === "history" ? <HistoryView /> : <DownloadsView failedOnly={view === "failed"} />}
           <DropOverlay />
         </div>

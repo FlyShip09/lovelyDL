@@ -16,23 +16,43 @@ use crate::strings;
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, specta::Type, tauri_specta::Event)]
 pub struct Update(pub Vec<Change>);
 
+struct Mirror {
+    state: JobState,
+    fraction: Option<f64>,
+    title: String,
+    /// Arrival order, close enough to queue order for the tray's short list.
+    seq: u64,
+}
+
 pub struct Shell {
-    jobs: HashMap<JobId, (JobState, Option<f64>)>,
+    jobs: HashMap<JobId, Mirror>,
+    seq: u64,
     settings: Settings,
     awake: platform::Awake,
     shown: (u32, Option<u64>, bool),
     toast_id: String,
+    /// What the tray last showed: its layout, its full text, and when it was rebuilt.
+    tray: (String, String, std::time::Instant),
 }
 
 impl Shell {
     pub fn new(settings: Settings, identifier: &str) -> Self {
         Self {
             jobs: HashMap::new(),
+            seq: 0,
             settings,
             awake: platform::Awake::new(),
             shown: (0, None, false),
             toast_id: platform::toast_app_id(identifier),
+            tray: (String::new(), String::new(), std::time::Instant::now()),
         }
+    }
+
+    fn remember(&mut self, job: &engine::model::Job) {
+        self.seq += 1;
+        let seq = self.jobs.get(&job.id).map_or(self.seq, |m| m.seq);
+        let title = if job.title.is_empty() { job.url.clone() } else { job.title.clone() };
+        self.jobs.insert(job.id.clone(), Mirror { state: job.state, fraction: job.progress.fraction, title, seq });
     }
 
     /// Passes a batch to the UI and updates everything outside the window.
@@ -40,12 +60,10 @@ impl Shell {
         let mut notices = Vec::new();
         for change in &changes {
             match change {
-                Change::JobAdded(job) | Change::JobUpdated(job) => {
-                    self.jobs.insert(job.id.clone(), (job.state, job.progress.fraction));
-                }
+                Change::JobAdded(job) | Change::JobUpdated(job) => self.remember(job),
                 Change::Progress { id, progress } => {
                     if let Some(entry) = self.jobs.get_mut(id) {
-                        entry.1 = progress.fraction;
+                        entry.fraction = progress.fraction;
                     }
                 }
                 Change::JobRemoved(id) => {
@@ -60,6 +78,7 @@ impl Shell {
             tracing::error!(%error, "could not send changes to the window");
         }
         self.update_taskbar(app);
+        self.update_tray(app);
         for notice in notices {
             self.notify(app, notice);
         }
@@ -67,15 +86,46 @@ impl Shell {
 
     /// Seeds the mirror from the jobs loaded at start-up.
     pub fn seed(&mut self, jobs: &[engine::model::Job]) {
-        for job in jobs {
-            self.jobs.insert(job.id.clone(), (job.state, job.progress.fraction));
+        jobs.iter().for_each(|job| self.remember(job));
+    }
+
+    /// Keeps the tray icon in step. Its layout is rebuilt at once; percentages at most once
+    /// a second, so a busy queue does not rebuild a menu ten times a second.
+    fn update_tray(&mut self, app: &AppHandle) {
+        let enabled = self.settings.tray_icon;
+        if let Some(state) = app.try_state::<crate::AppState>() {
+            state.tray.store(enabled, std::sync::atomic::Ordering::Relaxed);
         }
+        let mut live: Vec<(&JobId, &Mirror)> =
+            self.jobs.iter().filter(|(_, m)| is_active(m.state) || m.state == JobState::Queued).collect();
+        live.sort_by_key(|(_, m)| (m.state == JobState::Queued, m.seq));
+        let entries: Vec<crate::tray::Entry> = live
+            .iter()
+            .map(|(id, m)| crate::tray::Entry {
+                id: (*id).clone(),
+                title: m.title.clone(),
+                percent: m.fraction.map(|f| (f * 100.0) as u32),
+                waiting: m.state == JobState::Queued,
+            })
+            .collect();
+        let paused = self.jobs.values().any(|m| m.state == JobState::Paused);
+        let layout = format!(
+            "{enabled}{paused}{}",
+            entries.iter().map(|e| format!("{}{}", e.id, e.waiting)).collect::<String>()
+        );
+        let text = format!("{layout}{:?}", entries.iter().map(|e| e.percent).collect::<Vec<_>>());
+        let (last_layout, last_text, at) = &self.tray;
+        let quiet = !enabled && last_layout.is_empty();
+        if quiet || text == *last_text || (layout == *last_layout && at.elapsed().as_millis() < 1000) {
+            return;
+        }
+        crate::tray::sync(app, enabled, &entries, paused);
+        self.tray = (layout, text, std::time::Instant::now());
     }
 
     fn update_taskbar(&mut self, app: &AppHandle) {
-        let active: Vec<Option<f64>> =
-            self.jobs.values().filter(|(state, _)| is_active(*state)).map(|(_, fraction)| *fraction).collect();
-        let waiting = self.jobs.values().filter(|(state, _)| *state == JobState::Queued).count();
+        let active: Vec<Option<f64>> = self.jobs.values().filter(|m| is_active(m.state)).map(|m| m.fraction).collect();
+        let waiting = self.jobs.values().filter(|m| m.state == JobState::Queued).count();
         let count = (active.len() + waiting) as u32;
         // Each running download counts the same; one with no known size counts as half done.
         let progress = (!active.is_empty())

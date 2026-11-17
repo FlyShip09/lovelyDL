@@ -55,6 +55,7 @@ export const commands = {
 	windowLabel: (options?: InvokeOptions) => __TAURI_INVOKE<string>("window_label", undefined, options),
 	/**  Stops running downloads so they resume on the next launch, then quits. */
 	quit: (options?: InvokeOptions) => __TAURI_INVOKE<null>("quit", undefined, options),
+	/**  Async on purpose: building a window inside a synchronous command deadlocks on Windows. */
 	openSettings: (options?: InvokeOptions) => __TAURI_INVOKE<null>("open_settings", undefined, options),
 	openLink: (link: Link, options?: InvokeOptions) => __TAURI_INVOKE<null>("open_link", { link }, options),
 	/**  Looks for a newer lovelyDL. Returns its version, or `None` when this one is current. */
