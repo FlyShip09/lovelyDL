@@ -12,6 +12,7 @@ import { formatBytes } from "../../store/derive";
 import { errorCopy, s } from "../../strings";
 import { copy } from "../downloads/actions";
 import rowStyles from "../downloads/downloads.module.css";
+import { startDragOut } from "../downloads/JobRow";
 import { Thumb } from "../downloads/Thumb";
 import styles from "./history.module.css";
 
@@ -180,7 +181,10 @@ export function HistoryView() {
                     right: 12,
                     transform: `translateY(${row.start}px)`,
                   }}
-                  onMouseDown={() => setSelected(job.id)}
+                  onMouseDown={(e) => {
+                    setSelected(job.id);
+                    if (!failed && !job.fileMissing && e.button === 0) startDragOut(e, job.id);
+                  }}
                   onDoubleClick={() => !failed && !job.fileMissing && void commands.openFile(job.id)}
                   onContextMenu={(e) => {
                     e.preventDefault();

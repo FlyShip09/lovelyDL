@@ -1,5 +1,5 @@
 import { FolderOpen, Pause, Play, RotateCw, X } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, Reorder } from "motion/react";
 import { memo, useEffect, useRef, useState } from "react";
 
 import { Button, IconButton } from "../../components/Button";
@@ -14,6 +14,22 @@ import { errorBody, errorCopy, fixLabel, s } from "../../strings";
 import { applyFix, copy, jobMenu } from "./actions";
 import styles from "./downloads.module.css";
 import { Thumb } from "./Thumb";
+
+/** A finished row dragged a few pixels starts a real file drag, as a Finder row would. */
+export function startDragOut(down: React.MouseEvent, id: string) {
+  const { clientX: x, clientY: y } = down;
+  const move = (e: MouseEvent) => {
+    if (Math.hypot(e.clientX - x, e.clientY - y) < 6) return;
+    stop();
+    void commands.dragOut(id).catch(() => undefined);
+  };
+  const stop = () => {
+    window.removeEventListener("mousemove", move);
+    window.removeEventListener("mouseup", stop);
+  };
+  window.addEventListener("mousemove", move);
+  window.addEventListener("mouseup", stop);
+}
 
 /** Speed and time left change at most twice a second, so they stay readable. */
 function useSteady<T>(value: T, ms = 500): T {
@@ -56,9 +72,11 @@ interface Props {
   selected: boolean;
   selection: string[];
   onSelect: (id: string, how: "only" | "toggle" | "range") => void;
+  /** Makes the row itself draggable within a Reorder.Group; called when a drag ends. */
+  onReorderEnd?: () => void;
 }
 
-export const JobRow = memo(function JobRow({ job, selected, selection, onSelect }: Props) {
+export const JobRow = memo(function JobRow({ job, selected, selection, onSelect, onReorderEnd }: Props) {
   const p = job.progress;
   const active = isActive(job.state);
   const speed = useSteady(job.state === "downloading" ? formatSpeed(p.speed) : "");
@@ -70,25 +88,27 @@ export const JobRow = memo(function JobRow({ job, selected, selection, onSelect 
   const error = job.state === "failed" ? job.error : null;
   const copyText = error ? errorCopy[error.kind] : null;
 
-  return (
-    <div
-      role="row"
-      aria-selected={selected}
-      aria-label={rowLabel(job)}
-      tabIndex={selected ? 0 : -1}
-      data-job={job.id}
-      className={styles.row}
-      onMouseDown={(e) => {
-        if (e.button !== 0) return;
-        onSelect(job.id, e.shiftKey ? "range" : e.ctrlKey ? "toggle" : "only");
-      }}
-      onDoubleClick={() => job.state === "completed" && void commands.openFile(job.id)}
-      onContextMenu={(e) => {
-        e.preventDefault();
-        if (!selected) onSelect(job.id, "only");
-        openMenu(jobMenu(job, selected ? selection : [job.id]), { x: e.clientX, y: e.clientY });
-      }}
-    >
+  const rowProps = {
+    role: "row",
+    "aria-selected": selected,
+    "aria-label": rowLabel(job),
+    tabIndex: selected ? 0 : -1,
+    "data-job": job.id,
+    className: styles.row,
+    onMouseDown: (e: React.MouseEvent) => {
+      if (e.button !== 0) return;
+      onSelect(job.id, e.shiftKey ? "range" : e.ctrlKey ? "toggle" : "only");
+      if (job.state === "completed" && !job.fileMissing) startDragOut(e, job.id);
+    },
+    onDoubleClick: () => job.state === "completed" && void commands.openFile(job.id),
+    onContextMenu: (e: React.MouseEvent) => {
+      e.preventDefault();
+      if (!selected) onSelect(job.id, "only");
+      openMenu(jobMenu(job, selected ? selection : [job.id]), { x: e.clientX, y: e.clientY });
+    },
+  };
+  const content = (
+    <>
       <Thumb src={job.thumbnail} kind={job.kind} state={job.state} fraction={p.fraction} />
       <div className={styles.text} role="gridcell">
         <span className={`${styles.title} selectable`}>{job.title || job.url}</span>
@@ -105,7 +125,7 @@ export const JobRow = memo(function JobRow({ job, selected, selection, onSelect 
               exit={{ opacity: 0 }}
               transition={fade}
             >
-              {error && copyText ? copyText.title : job.fileMissing ? s.fileMissing : statusLine(job)}
+              {statusLine(job)}
             </motion.span>
           </AnimatePresence>
           {(percent || speed || eta) && (
@@ -171,6 +191,25 @@ export const JobRow = memo(function JobRow({ job, selected, selection, onSelect 
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </>
   );
+  // In the Queued section the row itself is the draggable item: no wrapper between the
+  // row group and the row, which assistive tech would trip over.
+  if (onReorderEnd) {
+    return (
+      <Reorder.Item
+        as="div"
+        value={job.id}
+        layout="position"
+        transition={smooth}
+        whileDrag={{ scale: 1.01, boxShadow: "var(--shadow-lift)", zIndex: 2 }}
+        onDragEnd={onReorderEnd}
+        {...rowProps}
+        className={`${styles.row} ${styles.reorderItem}`}
+      >
+        {content}
+      </Reorder.Item>
+    );
+  }
+  return <div {...rowProps}>{content}</div>;
 });

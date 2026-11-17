@@ -1,5 +1,5 @@
 import { X } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, Reorder } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { IconButton } from "../../components/Button";
@@ -34,10 +34,10 @@ function arrange(order: string[], jobs: Record<string, Job>, place: (job: Job) =
 
 function Empty({ failedOnly }: { failedOnly: boolean }) {
   return (
-    <motion.div className={styles.empty} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={fade}>
+    <div className={styles.empty}>
       <span className={styles.emptyTitle}>{failedOnly ? s.emptyFailedTitle : s.emptyTitle}</span>
       <span className={styles.emptyBody}>{failedOnly ? s.emptyFailedBody : s.emptyBody}</span>
-    </motion.div>
+    </div>
   );
 }
 
@@ -50,6 +50,8 @@ export function DownloadsView({ failedOnly }: { failedOnly: boolean }) {
   const focusJob = useApp((st) => st.focusJob);
   const justCompleted = useApp((st) => st.justCompleted);
   const [frozen, setFrozen] = useState<Map<string, SectionId> | null>(null);
+  // While a queued row is dragged, its section shows this order; the engine gets it on drop.
+  const [dragOrder, setDragOrder] = useState<string[] | null>(null);
   const list = useRef<HTMLDivElement>(null);
 
   const place = (job: Job): SectionId =>
@@ -57,6 +59,17 @@ export function DownloadsView({ failedOnly }: { failedOnly: boolean }) {
   const all = arrange(order, jobs, place);
   const sections = failedOnly ? all.filter((x) => x.id === "failed") : all;
   const flat = useMemo(() => sections.flatMap((x) => x.jobs.map((j) => j.id)), [sections]);
+
+  /** Puts the dragged order of the queued section back into the whole queue and saves it. */
+  const commitOrder = (queued: string[]) => {
+    const next = dragOrder;
+    setDragOrder(null);
+    if (!next || next.join() === queued.join()) return;
+    let i = 0;
+    const whole = order.map((id) => (queued.includes(id) ? (next[i++] ?? id) : id));
+    useApp.setState({ order: whole });
+    void commands.jobsReorder(whole);
+  };
 
   const onSelect = useCallback(
     (id: string, how: "only" | "toggle" | "range") => {
@@ -154,8 +167,10 @@ export function DownloadsView({ failedOnly }: { failedOnly: boolean }) {
       {empty ? (
         <Empty failedOnly={failedOnly} />
       ) : (
-        <div
+        <motion.div
           ref={list}
+          layout="position"
+          transition={smooth}
           role="grid"
           aria-multiselectable
           aria-label={failedOnly ? s.failed : s.downloads}
@@ -185,34 +200,59 @@ export function DownloadsView({ failedOnly }: { failedOnly: boolean }) {
                     {sectionTitle[section.id]}
                   </div>
                 )}
-                <AnimatePresence initial={false}>
-                  {section.jobs.map((job, i) => (
-                    <motion.div
-                      key={job.id}
-                      role="presentation"
-                      layout="position"
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{
-                        opacity: 0,
-                        height: 0,
-                        transition: { ...smooth, delay: Math.min(i, 6) * 0.02 },
-                      }}
-                      transition={smooth}
-                    >
-                      <JobRow
-                        job={job}
-                        selected={selection.includes(job.id)}
-                        selection={selection}
-                        onSelect={onSelect}
-                      />
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
+                {section.id === "queued" && section.jobs.length > 1 && !failedOnly ? (
+                  <Reorder.Group
+                    as="div"
+                    axis="y"
+                    role="presentation"
+                    values={dragOrder ?? section.jobs.map((j) => j.id)}
+                    onReorder={setDragOrder}
+                  >
+                    {(dragOrder ?? section.jobs.map((j) => j.id)).map((id) => {
+                      const job = jobs[id];
+                      if (!job) return null;
+                      return (
+                        <JobRow
+                          key={id}
+                          job={job}
+                          selected={selection.includes(job.id)}
+                          selection={selection}
+                          onSelect={onSelect}
+                          onReorderEnd={() => commitOrder(section.jobs.map((j) => j.id))}
+                        />
+                      );
+                    })}
+                  </Reorder.Group>
+                ) : (
+                  <AnimatePresence initial={false}>
+                    {section.jobs.map((job, i) => (
+                      <motion.div
+                        key={job.id}
+                        role="presentation"
+                        layout="position"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{
+                          opacity: 0,
+                          height: 0,
+                          transition: { ...smooth, delay: Math.min(i, 6) * 0.02 },
+                        }}
+                        transition={smooth}
+                      >
+                        <JobRow
+                          job={job}
+                          selected={selection.includes(job.id)}
+                          selection={selection}
+                          onSelect={onSelect}
+                        />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                )}
               </motion.div>
             ))}
           </AnimatePresence>
-        </div>
+        </motion.div>
       )}
     </div>
   );

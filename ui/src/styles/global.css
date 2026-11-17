@@ -85,3 +85,57 @@ a {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* Contrast themes remove backgrounds and shadows. Controls get an outline the system colors
+   in, focus becomes a real outline, and selection uses the system's Highlight pair. */
+@media (forced-colors: active) {
+  button,
+  input,
+  textarea {
+    outline: 1px solid transparent;
+    outline-offset: -1px;
+  }
+
+  :focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 1px;
+  }
+
+  [aria-selected="true"],
+  [role="tab"][aria-selected="true"],
+  [role="radio"][aria-checked="true"],
+  [role="menuitem"][data-active="true"],
+  [role="menuitemcheckbox"][data-active="true"] {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  [role="progressbar"] {
+    forced-color-adjust: none;
+    background: Canvas;
+    outline: 1px solid CanvasText;
+  }
+
+  [role="progressbar"] > span {
+    background: Highlight;
+  }
+
+  [role="switch"] {
+    forced-color-adjust: none;
+    background: Canvas;
+    outline: 1px solid ButtonText;
+  }
+
+  [role="switch"][aria-checked="true"] {
+    background: Highlight;
+  }
+
+  [role="switch"] > span {
+    background: ButtonText;
+  }
+
+  [role="switch"][aria-checked="true"] > span {
+    background: HighlightText;
+  }
+}

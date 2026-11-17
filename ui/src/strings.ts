@@ -44,6 +44,8 @@ export const s = {
   emptyHistoryBody: "Finished downloads are listed here.",
   noMatches: "No matches",
 
+  sections: "Sections",
+
   // Queue sections
   sectionActive: "Active",
   sectionQueued: "Queued",
@@ -141,7 +143,231 @@ export const s = {
 
   // Legal line, shown in onboarding and the README
   legal: "Download only what you have the right to save.",
+
+  // Common buttons and tool states
+  done: "Done",
+  back: "Back",
+  continueButton: "Continue",
+  later: "Later",
+  copy: "Copy",
+  install: "Install",
+  installing: "Installing…",
+  installingTool: (name: string) => `Installing ${name}`,
+  installAndRestart: "Install and restart",
+  update: "Update",
+  checking: "Checking…",
+  notInstalled: "Not installed",
+  cantSaveFolder: (error: string) => `lovelyDL can't save to that folder: ${error}`,
+
+  // Keyboard shortcuts sheet
+  shortcutAddCopied: "Add the copied link",
+  shortcutDownloadPreview: "Download the previewed link",
+  shortcutPauseResume: "Pause or resume the selected downloads",
+  shortcutRemove: "Remove the selected downloads",
+  shortcutSelectAll: "Select all downloads",
+  shortcutSections: "Downloads, History, Failed",
+
+  // About sheet
+  aboutVersion: (version: string) => `Version ${version}. Free software under the GPL, version 3 or later.`,
+  github: "GitHub",
+
+  // Updates sheet and banner
+  upToDate: "lovelyDL is up to date.",
+  updateFound: (version: string) =>
+    `lovelyDL ${version} is available. Downloads pause and continue after the restart.`,
+  updateBannerLabel: (version: string) => `lovelyDL ${version} is available`,
+  updateBannerText: (version: string) => `lovelyDL ${version} is available.`,
+
+  // Formats sheet
+  formatsTitle: "Formats",
+  formatsBody: "Pick a video stream and an audio stream; ffmpeg joins them.",
+  formatsVideo: "Video",
+  formatsAudio: "Audio",
+  formatAudioCell: "audio",
+  chosenByPreset: "Chosen by the preset",
+  useAndRetry: "Use and retry",
+  useThese: "Use these",
+
+  // Subtitles and sponsor segments (Options sheet and Settings)
+  subtitlesRow: "Subtitles:",
+  downloadSubtitles: "Download subtitles",
+  downloadSubtitlesWith: (languages: string) => `Download subtitles (${languages})`,
+  languages: "Languages",
+  subtitleLanguages: "Subtitle languages",
+  autoCaptions: "Include auto-generated captions",
+  sponsorMark: "Mark as chapters",
+  sponsorRemove: "Cut out",
+
+  // Options sheet
+  optionsTitle: "Options for this download",
+  saveToRow: "Save to:",
+  useDefault: "Use default",
+  partRow: "Only part of it:",
+  startTime: "Start time",
+  startPlaceholder: "Start, e.g. 1:30",
+  timeTo: "to",
+  endTime: "End time",
+  endPlaceholder: "End, e.g. 2:45",
+  timeFormatError: "Use seconds or minutes:seconds, like 90 or 1:30.",
+  preciseCuts: "Cut exactly at these times (slower, re-encodes the edges)",
+  sponsorSegmentsRow: "Sponsor segments:",
+  sponsorSegmentsLabel: "Sponsor segments",
+  sponsorKeep: "Keep as they are",
+  liveRow: "Live stream:",
+  liveFromStart: "Record from the start of the stream",
+  waitForLive: "If it has not started, wait for it",
+  useOptions: "Use these options",
+
+  // Onboarding
+  toolPurposeYtdlp: "Reads the site and downloads the media",
+  toolPurposeFfmpeg: "Joins video and audio, converts formats",
+  toolPurposeDeno: "Lets yt-dlp read YouTube",
+  toolFound: (version: string) => `Found, ${version}`,
+  toolBroken: "Doesn't run",
+  welcomeTitle: "Welcome to lovelyDL",
+  welcomeLead:
+    "Paste a link, get the file. Video and audio from the sites yt-dlp supports, saved to your PC.",
+  folderTitle: "Where should downloads go?",
+  folderLead: "You can change this later, or for a single download.",
+  toolsTitle: "Get the tools",
+  toolsLead:
+    "lovelyDL uses three free tools. It downloads them from their official releases, checks each file, and keeps them up to date.",
+  useSystemTools: "Use tools already installed on this PC",
+  doneTitle: "You're set",
+  doneLead: "Copy a link in your browser, come back, and press Ctrl+V. Or drag the link onto the window.",
+  startUsing: "Start using lovelyDL",
+
+  // Settings window
+  tabGeneral: "General",
+  tabFormats: "Formats",
+  tabNetwork: "Network & Accounts",
+  tabComponents: "Components",
+  tabAdvanced: "Advanced",
+
+  // Settings: General
+  saveDownloadsTo: "Save downloads to:",
+  onAddRow: "When a link is added:",
+  onAddLabel: "When a link is added",
+  onAddPreview: "Show the preview",
+  onAddDownload: "Download straight away",
+  concurrentRow: "Downloads at once:",
+  concurrentNote: "How many run at the same time, and from one site.",
+  concurrentLabel: "Downloads at once",
+  perSite: "per site",
+  perSiteLabel: "Downloads per site",
+  notificationsRow: "Notifications:",
+  notificationsSwitch: "Tell me when downloads finish or fail",
+  clipboardRow: "Clipboard:",
+  clipboardNote:
+    "When you switch to lovelyDL, it checks whether you copied a link and offers to add it. It never reads the clipboard in the background.",
+  clipboardSwitch: "Notice copied links",
+  keepAwakeRow: "While downloading:",
+  keepAwakeSwitch: "Keep the computer awake",
+  trayRow: "System tray:",
+  trayNote: "Shows a small queue in the notification area. Closing the window then keeps lovelyDL running.",
+  traySwitch: "Show lovelyDL in the system tray",
+
+  // Settings: Formats
+  defaultFormatRow: "Default format:",
+  embedRow: "Embed:",
+  embedThumbnail: "Thumbnail as cover art",
+  embedMetadata: "Title, artist and other metadata",
+  embedChapters: "Chapters",
+  subLangsPlaceholder: "en, fr",
+  subtitleFilesLabel: "Subtitle files",
+  embedSubs: "Embed in the video",
+  separateSubs: "Save as separate files",
+  sponsorBlockRow: "SponsorBlock:",
+  sponsorBlockNote: "Segments come from the SponsorBlock community database.",
+  sponsorBlockLabel: "SponsorBlock",
+  sponsorOff: "Off",
+  fileNamesRow: "File names:",
+  fileNameExample: "Example:",
+  fileNameTemplate: "File name template",
+  playlistsRow: "Playlists:",
+  playlistIndex: "Number the files in playlist order",
+
+  // Settings: Network & Accounts
+  speedLimitRow: "Speed limit:",
+  speedLimitNote: "For example 2M for 2 MB/s, or 500K. Empty means no limit.",
+  speedLimitLabel: "Speed limit",
+  noLimit: "No limit",
+  proxyRow: "Proxy:",
+  proxyNote: "http://, https:// or socks5:// with a host and port.",
+  proxyLabel: "Proxy",
+  proxyNone: "None",
+  bigPlaylistsRow: "Big playlists:",
+  paceNote: "Waits a few seconds between requests, so sites are less likely to block a long run.",
+  paceSwitch: "Pace requests",
+  cookiesRow: "Signed-in content:",
+  cookiesNoteFirefox:
+    "yt-dlp reads Firefox's cookies at download time. lovelyDL never copies or stores them.",
+  cookiesNoteChromium: (browser: string) =>
+    `Close ${browser} before downloading: Windows locks its cookies while it runs. lovelyDL never copies or stores them.`,
+  cookiesNoteNone:
+    "Use a browser where you are signed in, for videos that need an account. Cookies are read at download time and never stored.",
+  cookiesLabel: "Use cookies from",
+  cookiesFrom: (browser: string) => `Use cookies from ${browser}`,
+  noCookies: "Don't use cookies",
+  bookmarkletRow: "Bookmarklet:",
+  bookmarkletNote:
+    "Make a bookmark with this as its address. Clicking it on a video page opens the page in lovelyDL.",
+
+  // Settings: Components
+  ffmpegAndFfprobe: "ffmpeg and ffprobe",
+  originManaged: "kept up to date by lovelyDL",
+  originSystem: "installed on this PC",
+  originCustom: "your own copy",
+  toolBrokenDetail: (message: string) => `Doesn't run: ${message}`,
+  versionAvailable: (version: string) => `${version} available`,
+  previousVersion: "Previous version",
+  ytdlpBuildsRow: "yt-dlp builds:",
+  ytdlpBuildsNote: "Nightly builds fix broken sites sooner, and are tested less.",
+  ytdlpBuildsLabel: "yt-dlp builds",
+  channelStable: "Stable",
+  channelNightly: "Nightly",
+  updatesRow: "Updates:",
+  updatesNote: "Checked at most once a day, and never while something is downloading.",
+  autoUpdateTools: "Update the tools automatically",
+  installedToolsRow: "Installed tools:",
+  preferSystemTools: "Prefer tools already installed on this PC",
+  checkAgain: "Check again",
+
+  // Settings: Advanced
+  ytdlpRow: "yt-dlp:",
+  customYtdlpNote: "A yt-dlp.exe to use instead of lovelyDL's own.",
+  customYtdlpLabel: "Custom yt-dlp",
+  managedByApp: "Managed by lovelyDL",
+  ffmpegFolderRow: "ffmpeg folder:",
+  customFfmpegLabel: "Custom ffmpeg folder",
+  jsRuntimeRow: "JavaScript runtime:",
+  jsRuntimeNote:
+    "name:path, for example node:C:\\Program Files\\nodejs\\node.exe. Deno, Node 22+, QuickJS and Bun work.",
+  customJsLabel: "Custom JavaScript runtime",
+  jsRuntimePlaceholder: "Deno, managed by lovelyDL",
+  fragmentsRow: "Fragments at once:",
+  fragmentsNote: "Speeds up streams that arrive in pieces. Some sites limit this.",
+  fragmentsLabel: "Fragments at once",
+  extraArgsRow: "Extra yt-dlp options:",
+  extraArgsNote:
+    "One option per line. For people who know yt-dlp; links and imported settings can never set these.",
+  extraArgsSwitch: "Pass extra options to yt-dlp",
+  extraArgsLabel: "Extra yt-dlp options",
+  appUpdatesRow: "lovelyDL updates:",
+  autoUpdateApp: "Check for updates automatically",
 } as const;
+
+// SponsorBlock category ids and their names, in the order Settings lists them.
+export const sponsorCategoryLabel: Record<string, string> = {
+  sponsor: "Sponsors",
+  selfpromo: "Self-promotion",
+  interaction: "Subscribe reminders",
+  intro: "Intros",
+  outro: "Endcards",
+  preview: "Previews and recaps",
+  music_offtopic: "Non-music in music videos",
+  filler: "Filler",
+};
 
 export const stageLabel: Record<Stage, string> = {
   waiting: "Waiting",

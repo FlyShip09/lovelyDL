@@ -33,6 +33,11 @@ export const commands = {
 	historyTrash: (ids: string[], options?: InvokeOptions) => __TAURI_INVOKE<null>("history_trash", { ids }, options),
 	downloadAgain: (id: string, options?: InvokeOptions) => __TAURI_INVOKE<null>("download_again", { id }, options),
 	reveal: (id: string, options?: InvokeOptions) => __TAURI_INVOKE<null>("reveal", { id }, options),
+	/**
+	 *  Starts dragging a finished download's file out of the window (to Explorer, an editor…).
+	 *  The page names the job, never a path, so it can only offer files lovelyDL saved.
+	 */
+	dragOut: (id: string, options?: InvokeOptions) => __TAURI_INVOKE<null>("drag_out", { id }, options),
 	openFile: (id: string, options?: InvokeOptions) => __TAURI_INVOKE<null>("open_file", { id }, options),
 	openFolder: (options?: InvokeOptions) => __TAURI_INVOKE<null>("open_folder", undefined, options),
 	copyLink: (id: string, options?: InvokeOptions) => __TAURI_INVOKE<null>("copy_link", { id }, options),
@@ -743,6 +748,7 @@ export type MockCommandHandlers = {
     historyTrash: (args: { ids: string[] }) => null | Promise<null>,
     downloadAgain: (args: { id: string }) => null | Promise<null>,
     reveal: (args: { id: string }) => null | Promise<null>,
+    dragOut: (args: { id: string }) => null | Promise<null>,
     openFile: (args: { id: string }) => null | Promise<null>,
     openFolder: () => null | Promise<null>,
     copyLink: (args: { id: string }) => null | Promise<null>,
@@ -815,6 +821,7 @@ export function mockCommands(handlers: Partial<MockCommandHandlers> = {}): void 
             case "history_trash": return mockCommandHandler(mockHandlers.historyTrash, "history_trash", args);
             case "download_again": return mockCommandHandler(mockHandlers.downloadAgain, "download_again", args);
             case "reveal": return mockCommandHandler(mockHandlers.reveal, "reveal", args);
+            case "drag_out": return mockCommandHandler(mockHandlers.dragOut, "drag_out", args);
             case "open_file": return mockCommandHandler(mockHandlers.openFile, "open_file", args);
             case "open_folder": return mockCommandHandler(mockHandlers.openFolder, "open_folder", args);
             case "copy_link": return mockCommandHandler(mockHandlers.copyLink, "copy_link", args);

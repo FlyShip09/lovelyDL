@@ -7,6 +7,7 @@ import { Button } from "../../components/Button";
 import { Banner } from "../../components/chrome";
 import { commands } from "../../ipc";
 import { useApp } from "../../store/app";
+import { s } from "../../strings";
 import styles from "./shell.module.css";
 
 export function UpdateBanner() {
@@ -25,10 +26,10 @@ export function UpdateBanner() {
     };
   }, [allowed]);
   return (
-    <Banner open={version !== null} label={`lovelyDL ${version ?? ""} is available`}>
-      <span className={styles.bannerText}>lovelyDL {version} is available.</span>
+    <Banner open={version !== null} label={s.updateBannerLabel(version ?? "")}>
+      <span className={styles.bannerText}>{s.updateBannerText(version ?? "")}</span>
       <Button variant="plain" onClick={() => setVersion(null)}>
-        Later
+        {s.later}
       </Button>
       <Button
         variant="primary"
@@ -38,7 +39,7 @@ export function UpdateBanner() {
           commands.appUpdateInstall().catch(() => setInstalling(false));
         }}
       >
-        {installing ? "Installing…" : "Install and restart"}
+        {installing ? s.installing : s.installAndRestart}
       </Button>
     </Banner>
   );

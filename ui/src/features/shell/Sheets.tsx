@@ -34,18 +34,18 @@ function QuitSheet({ count }: { count: number }) {
 }
 
 const shortcuts: [string, string][] = [
-  ["Ctrl+V", "Add the copied link"],
-  ["Ctrl+N", "New download"],
-  ["Ctrl+Shift+V", "Paste and download"],
-  ["Enter", "Download the previewed link"],
-  ["Space", "Pause or resume the selected downloads"],
-  ["Delete", "Remove the selected downloads"],
-  ["Ctrl+A", "Select all downloads"],
-  ["Ctrl+1, 2, 3", "Downloads, History, Failed"],
-  ["Ctrl+F", "Search history"],
-  ["Ctrl+Alt+S", "Show or hide the sidebar"],
-  ["Ctrl+,", "Settings"],
-  ["Ctrl+Q", "Quit"],
+  ["Ctrl+V", s.shortcutAddCopied],
+  ["Ctrl+N", s.newDownload],
+  ["Ctrl+Shift+V", s.pasteAndDownload],
+  ["Enter", s.shortcutDownloadPreview],
+  ["Space", s.shortcutPauseResume],
+  ["Delete", s.shortcutRemove],
+  ["Ctrl+A", s.shortcutSelectAll],
+  ["Ctrl+1, 2, 3", s.shortcutSections],
+  ["Ctrl+F", s.searchHistory],
+  ["Ctrl+Alt+S", s.toggleSidebar],
+  ["Ctrl+,", s.settings],
+  ["Ctrl+Q", s.quitButton],
 ];
 
 function ShortcutsSheet() {
@@ -62,7 +62,7 @@ function ShortcutsSheet() {
       </dl>
       <div className={styles.buttons}>
         <Button variant="primary" data-autofocus onClick={close}>
-          Done
+          {s.done}
         </Button>
       </div>
     </div>
@@ -81,10 +81,8 @@ function AboutSheet() {
   const version = useApp((st) => st.system.appVersion);
   return (
     <div className={styles.alert}>
-      <h2 className={styles.title}>lovelyDL</h2>
-      <p className={styles.body}>
-        Version {version || "0.1.0"}. Free software under the GPL, version 3 or later.
-      </p>
+      <h2 className={styles.title}>{s.app}</h2>
+      <p className={styles.body}>{s.aboutVersion(version || "0.1.0")}</p>
       <p className={styles.body}>{s.legal}</p>
       <ul className={styles.credits}>
         {credits.map(([name, license]) => (
@@ -95,9 +93,9 @@ function AboutSheet() {
         ))}
       </ul>
       <div className={styles.buttons}>
-        <Button onClick={() => void commands.openLink("project")}>GitHub</Button>
+        <Button onClick={() => void commands.openLink("project")}>{s.github}</Button>
         <Button variant="primary" data-autofocus onClick={close}>
-          Done
+          {s.done}
         </Button>
       </div>
     </div>
@@ -123,23 +121,19 @@ function UpdatesSheet() {
       <h2 className={styles.title}>{s.checkForUpdates.replace("…", "")}</h2>
       {state.phase === "checking" && (
         <p className={styles.row}>
-          <Spinner /> Checking…
+          <Spinner /> {s.checking}
         </p>
       )}
-      {state.phase === "current" && <p className={styles.body}>lovelyDL is up to date.</p>}
-      {state.phase === "found" && (
-        <p className={styles.body}>
-          lovelyDL {state.version} is available. Downloads pause and continue after the restart.
-        </p>
-      )}
+      {state.phase === "current" && <p className={styles.body}>{s.upToDate}</p>}
+      {state.phase === "found" && <p className={styles.body}>{s.updateFound(state.version)}</p>}
       {state.phase === "error" && <p className={styles.body}>{state.message}</p>}
       {state.phase === "installing" && (
         <p className={styles.row}>
-          <Spinner /> Installing…
+          <Spinner /> {s.installing}
         </p>
       )}
       <div className={styles.buttons}>
-        <Button onClick={close}>{state.phase === "found" ? "Later" : "Done"}</Button>
+        <Button onClick={close}>{state.phase === "found" ? s.later : s.done}</Button>
         {state.phase === "found" && (
           <Button
             variant="primary"
@@ -151,7 +145,7 @@ function UpdatesSheet() {
                 .catch((error: unknown) => setState({ phase: "error", message: String(error) }));
             }}
           >
-            Install and restart
+            {s.installAndRestart}
           </Button>
         )}
       </div>
@@ -196,7 +190,8 @@ function PlaylistSheet() {
       return next;
     });
   };
-  const allOn = shown.every((e) => isOn(e.id, e.downloaded));
+  // Entries skipped as already downloaded cannot be picked, so they do not count here.
+  const allOn = shown.filter((e) => !(skip && e.downloaded)).every((e) => isOn(e.id, e.downloaded));
   const toggle = (id: string, on: boolean) =>
     setDeselected((prev) => {
       const next = new Set(prev);
@@ -311,14 +306,14 @@ function PlaylistSheet() {
 }
 
 function describe(f: Format): string[] {
-  const res = f.height ? `${f.width ?? "?"}×${f.height}` : "audio";
+  const res = f.height ? `${f.width ?? "?"}×${f.height}` : s.formatAudioCell;
   return [
     f.id,
     res,
     f.fps ? `${Math.round(f.fps)}` : "",
     codecName(f.vcodec || f.acodec),
     f.tbr ? `${Math.round(f.tbr)}k` : "",
-    `${f.bytesApprox && f.bytes ? "~" : ""}${formatBytes(f.bytes)}`,
+    `${f.bytesApprox && f.bytes ? s.approx : ""}${formatBytes(f.bytes)}`,
     f.ext,
   ];
 }
@@ -356,9 +351,7 @@ function FormatsSheet({ jobId }: { jobId: string | null }) {
       <div className={styles.formatTable} role="radiogroup" aria-label={title}>
         <label className={styles.formatRow}>
           <input type="radio" checked={value === null} onChange={() => set(null)} />
-          <span className={styles.formatAuto}>
-            {title === "Video" ? "Chosen by the preset" : "Chosen by the preset"}
-          </span>
+          <span className={styles.formatAuto}>{s.chosenByPreset}</span>
         </label>
         {list.map((f) => (
           <label key={f.id} className={styles.formatRow}>
@@ -376,8 +369,8 @@ function FormatsSheet({ jobId }: { jobId: string | null }) {
   return (
     <div className={styles.playlist}>
       <div className={styles.header}>
-        <h2 className={styles.title}>Formats</h2>
-        <span className={styles.muted}>Pick a video stream and an audio stream; ffmpeg joins them.</span>
+        <h2 className={styles.title}>{s.formatsTitle}</h2>
+        <span className={styles.muted}>{s.formatsBody}</span>
       </div>
       <div className={styles.entries}>
         {!info && !error && (
@@ -386,14 +379,14 @@ function FormatsSheet({ jobId }: { jobId: string | null }) {
           </p>
         )}
         {error && <p className={styles.body}>{error}</p>}
-        {info && table("Video", videos, video, setVideo)}
-        {info && table("Audio", audios, audio, setAudio)}
+        {info && table(s.formatsVideo, videos, video, setVideo)}
+        {info && table(s.formatsAudio, audios, audio, setAudio)}
       </div>
       <div className={styles.footer}>
         <span className={styles.grow} />
         <Button onClick={close}>{s.cancelButton}</Button>
         <Button variant="primary" disabled={!info} onClick={apply}>
-          {jobId ? "Use and retry" : "Use these"}
+          {jobId ? s.useAndRetry : s.useThese}
         </Button>
       </div>
     </div>
@@ -404,12 +397,19 @@ export function Sheets() {
   const sheet = useApp((st) => st.sheet);
   const kind = sheet?.kind;
   const onClose = kind === "playlist" ? dismissPreview : close;
-  const label =
-    kind === "quit"
-      ? s.quitTitle(sheet?.kind === "quit" ? sheet.count : 0)
-      : kind === "playlist"
-        ? s.playlistTitle("")
-        : (kind ?? "");
+  // The dialog's name matches the title each sheet shows.
+  const label = kind
+    ? {
+        quit: s.quitTitle(sheet.kind === "quit" ? sheet.count : 0),
+        shortcuts: s.keyboardShortcuts,
+        about: s.app,
+        updates: s.checkForUpdates.replace("…", ""),
+        playlist: s.playlistTitle(""),
+        formats: s.formatsTitle,
+        options: s.optionsTitle,
+        onboarding: "",
+      }[kind]
+    : "";
   return (
     <Sheet
       open={kind !== undefined && kind !== "onboarding"}

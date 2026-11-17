@@ -164,13 +164,30 @@ function Probing() {
     const timer = window.setTimeout(() => setShow(true), 300);
     return () => window.clearTimeout(timer);
   }, []);
-  if (!show) return null;
+  // The card already has the ready card's shape, so nothing jumps when the details arrive.
   return (
-    <div className={styles.waiting}>
-      <Spinner />
-      <span>{s.gettingDetails}</span>
-      <span className={styles.spacer} />
-      <IconButton small icon={X} label={s.dismissPreview} onClick={dismissPreview} />
+    <div aria-busy="true">
+      <div className={styles.cardTop}>
+        <span className={`${styles.thumb} ${styles.thumbLarge}`} aria-hidden />
+        <div className={styles.cardText}>
+          {show && (
+            <span className={styles.waiting}>
+              <Spinner />
+              <span>{s.gettingDetails}</span>
+            </span>
+          )}
+        </div>
+        <IconButton
+          small
+          icon={X}
+          label={s.dismissPreview}
+          className={styles.cardClose}
+          onClick={dismissPreview}
+        />
+      </div>
+      <div className={styles.controls} aria-hidden>
+        <span className={styles.controlSpace} />
+      </div>
     </div>
   );
 }
@@ -225,16 +242,19 @@ export function PreviewCard() {
   const preview = useApp((st) => st.preview);
   const visible = preview !== null && preview.status.status !== "playlist";
   return (
-    <AnimatePresence>
+    // popLayout: a card on its way out stops taking space at once, so the list below glides up.
+    <AnimatePresence mode="popLayout" initial={false}>
       {visible && (
         <motion.section
           key={preview.id}
+          layout="position"
           aria-label={preview.status.status === "ready" ? preview.status.info.title : s.gettingDetails}
           className={styles.card}
           initial={{ opacity: 0, y: -14, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 24, scale: 0.97, transition: { duration: 0.22 } }}
-          transition={gentle}
+          // A link still being read waits 300 ms before its card shows, so fast answers never flicker.
+          transition={{ ...gentle, delay: preview.status.status === "probing" ? 0.3 : 0 }}
         >
           <Body preview={preview} />
         </motion.section>

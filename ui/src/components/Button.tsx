@@ -40,7 +40,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
     <button
       ref={ref}
       type={type}
-      aria-label={label}
+      // The tooltip is also the accessible name.
       title={label}
       className={[styles.iconButton, small && styles.small, className].filter(Boolean).join(" ")}
       {...rest}

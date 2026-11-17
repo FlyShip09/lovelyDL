@@ -111,6 +111,18 @@ describe("rows", () => {
     expect(
       statusLine(job({ state: "postProcessing", progress: { ...downloading.progress, stage: "merging" } })),
     ).toBe("Merging video and audio");
+    // Screen readers hear the short explanation, not yt-dlp's raw message.
+    const failed = job({
+      state: "failed",
+      error: {
+        kind: "network",
+        fix: null,
+        retryable: true,
+        detail: "[generic] x: Unable to download webpage: <long>",
+      },
+    });
+    expect(rowLabel(failed)).toBe("A title, No connection");
+    expect(statusLine(job({ state: "completed", fileMissing: true }))).toBe("File moved or deleted");
   });
 
   it("serves thumbnails through the app, never straight from the internet", () => {

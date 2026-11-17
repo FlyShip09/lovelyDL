@@ -70,3 +70,9 @@
   margin: 5px 6px;
   background: var(--separator);
 }
+
+@media (forced-colors: active) {
+  .menu {
+    outline: 1px solid CanvasText;
+  }
+}

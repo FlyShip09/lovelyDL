@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { ArrowDownToLine, Clock, PanelLeft, TriangleAlert } from "lucide-react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 
 import { IconButton } from "../../components/Button";
 import { TrafficLights } from "../../components/chrome";
@@ -24,6 +24,24 @@ function useCounts() {
   });
 }
 
+/** A count that pulses when it changes, and never at launch. */
+function Count({ value }: { value: number }) {
+  return (
+    <AnimatePresence initial={false} mode="popLayout">
+      <motion.span
+        key={value}
+        className={`${styles.count} tabular`}
+        initial={{ scale: 1.3 }}
+        animate={{ scale: 1 }}
+        exit={{ opacity: 0, transition: { duration: 0 } }}
+        transition={snappy}
+      >
+        {value}
+      </motion.span>
+    </AnimatePresence>
+  );
+}
+
 export function Sidebar() {
   const view = useApp((st) => st.view);
   const [downloads, failed] = useCounts().split(":").map(Number);
@@ -38,7 +56,7 @@ export function Sidebar() {
         <TrafficLights />
         <IconButton icon={PanelLeft} label={s.toggleSidebar} onClick={toggleSidebar} />
       </div>
-      <div className={styles.list} role="tablist" aria-orientation="vertical">
+      <div className={styles.list} role="tablist" aria-orientation="vertical" aria-label={s.sections}>
         {items.map((item, index) => (
           <button
             key={item.id}
@@ -66,7 +84,7 @@ export function Sidebar() {
               <Icon icon={item.icon} size={16} />
             </span>
             <span className={styles.itemLabel}>{item.label}</span>
-            {item.count ? <span className={`${styles.count} tabular`}>{item.count}</span> : null}
+            {item.count ? <Count value={item.count} /> : null}
           </button>
         ))}
       </div>

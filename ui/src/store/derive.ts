@@ -1,7 +1,7 @@
 // Pure functions that turn engine data into what rows and cards show. No React here.
 
 import type { Job, JobState, Preset, Resolved } from "../ipc";
-import { s, stageLabel } from "../strings";
+import { errorCopy, s, stageLabel } from "../strings";
 
 const units = ["KB", "MB", "GB", "TB"];
 
@@ -174,9 +174,11 @@ export function statusLine(job: Job): string {
       return multi ? `${label} (${s.stageOf(p.stageIndex, p.stageCount)})` : label;
     }
     case "completed":
+      if (job.fileMissing) return s.fileMissing;
       return [formatBytes(job.bytes), job.site].filter(Boolean).join(" · ");
     case "failed":
-      return job.error?.detail ?? "";
+      // The short explanation; the raw message stays in the details below the row.
+      return job.error ? errorCopy[job.error.kind].title : "";
   }
 }
 

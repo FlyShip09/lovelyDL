@@ -104,3 +104,17 @@ for (const scheme of ["light", "dark"] as const) {
     });
   }
 }
+
+// Contrast themes (Windows' Increase Contrast): the system's own colors, real borders.
+for (const name of ["busy", "preview", "errors", "playlist", "onboarding", "settings-general"]) {
+  const screen = screens.find((s) => s.name === name);
+  if (!screen) continue;
+  test(`${name} (contrast)`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce", forcedColors: "active" });
+    await page.goto(screen.url);
+    await page.waitForSelector("#root > *");
+    await screen.then?.(page);
+    await page.waitForTimeout(700);
+    await page.screenshot({ path: `docs/screenshots/mock/${name}-contrast.png` });
+  });
+}

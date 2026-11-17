@@ -180,7 +180,55 @@ Not verified, and why:
   both of which need the owner (see RELEASING.md).
 - The bookmarklet is the same `lovelydl://` link verified above.
 
+## M6 · Motion and polish — done
+
+Built in this milestone: motion tuned against recorded contact sheets
+(`scripts/record-motion.mjs`, `docs/screenshots/motion/`; final values and the as-built
+choreography are in DESIGN.md), contrast-theme support (`forced-colors`, with its own
+screenshots), drag-out of finished files, custom-drawn radios in the Formats sheet, sheets
+anchored under the toolbar, every UI string moved to `ui/src/strings.ts`, and seven
+interaction tests (`ui/e2e/interactions.spec.ts`: drag to reorder, Ctrl+V then Enter, a
+non-link, arrow keys and Delete, Escape returns focus, the format pop-up, shift-click ranges).
+
+Performance, release build (`scripts/measure.ps1`), Windows 11, 16 cores, WebView2 157:
+
+| What | Result |
+|---|---|
+| Cold start to a visible, painted window | 614 ms first launch, then 357 and 342 ms |
+| Idle CPU, window open, 30 s | 47 ms of CPU time across all 7 processes (≈0.01 % of the machine) |
+| Idle memory | 380 MB working set, 176 MB private (lovelyDL plus its 6 WebView2 processes) |
+| Three active downloads, 20 s | App 0.54 % CPU, 434 MB working set, 208 MB private |
+| yt-dlp per download | ≈75 MB (PyInstaller launcher plus Python); its CPU stayed under Windows' 15.6 ms accounting tick at 300 KB/s per download |
+
+The WebView2 processes account for most of the memory; lovelyDL.exe itself uses 40 MB working
+set, 14 MB private.
+
+Accessibility, checked on the real app through the UI Automation tree that Narrator reads
+(Narrator itself was not run): traffic lights, toolbar buttons, the link field (with its
+placeholder as help text), the sidebar tabs with counts, the Downloads grid, and each row
+named "title, status". Fixed from that pass, and confirmed on a rebuilt release app: a
+failed row's name was yt-dlp's raw message (hundreds of characters) instead of the short
+explanation, and the sidebar's tab list had no name. Icon buttons also expose their tooltip
+as help text (Chromium does this for every `title`), which Narrator may repeat at high
+verbosity; kept, as tooltips are the Windows convention. Automated: axe on every mock screen
+in light, dark and contrast (55 Playwright tests).
+
+All checks: `cargo fmt --check`, `cargo clippy -D warnings`, `cargo test` (84 tests), tsc,
+ESLint, Prettier, Vitest (14), Playwright (55).
+
+Not verified, and why:
+
+- **Keep awake while downloading**: `powercfg /requests` needs an administrator prompt. The
+  code holds `SetThreadExecutionState(ES_SYSTEM_REQUIRED)` on its own thread while anything
+  is active.
+- **Dropping a dragged-out file** into Explorer or another app: needs real pointer input
+  outside the window. Starting the drag is a native call with the finished file's path.
+- **Narrator speech itself**: the tree it reads was checked instead.
+- **Acrylic sidebar**: Windows "Transparency effects" is off on this PC, and turning it on is
+  a system setting change.
+
 ## Next
 
-M6: motion and polish (choreography, signature element under Reduce Motion, drag-out,
-keep-awake), VoiceOver-equivalent (Narrator) pass, performance numbers, copy review.
+M7: CI and release workflows, README with screenshots, ARCHITECTURE, CONTRIBUTING,
+SECURITY, CODE_OF_CONDUCT, THIRD_PARTY_NOTICES, CHANGELOG, issue and PR templates, a winget
+manifest template.

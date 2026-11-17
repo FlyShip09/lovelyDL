@@ -173,6 +173,28 @@ pub async fn reveal(app: AppHandle, state: State<'_, AppState>, id: JobId) -> Re
     Ok(())
 }
 
+/// Starts dragging a finished download's file out of the window (to Explorer, an editor…).
+/// The page names the job, never a path, so it can only offer files lovelyDL saved.
+#[tauri::command]
+#[specta::specta]
+pub async fn drag_out(app: AppHandle, window: tauri::Window, state: State<'_, AppState>, id: JobId) -> Res<()> {
+    let path = state.engine.output_path(id).await?;
+    let icon = include_bytes!("../icons/64x64.png").to_vec();
+    app.run_on_main_thread(move || {
+        let started = drag::start_drag(
+            &window,
+            drag::DragItem::Files(vec![path]),
+            drag::Image::Raw(icon),
+            |_, _| {},
+            Default::default(),
+        );
+        if let Err(error) = started {
+            tracing::warn!(%error, "could not start dragging the file");
+        }
+    })
+    .map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn open_file(app: AppHandle, state: State<'_, AppState>, id: JobId) -> Res<()> {

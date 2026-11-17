@@ -251,3 +251,23 @@
     animation-duration: 2.4s;
   }
 }
+
+@media (forced-colors: active) {
+  .chevrons {
+    forced-color-adjust: none;
+    background: ButtonText;
+    color: ButtonFace;
+  }
+
+  .box[aria-checked="true"],
+  .box[aria-checked="mixed"] {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .segmentPill {
+    forced-color-adjust: none;
+    background: Highlight;
+  }
+}

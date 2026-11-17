@@ -8,6 +8,7 @@ import { Checkbox, PopUpButton, TextField } from "../../components/controls";
 import type { DownloadRequest, MediaInfo, Options, SponsorBlock } from "../../ipc";
 import { commands } from "../../ipc";
 import { openSheet, updatePreview, useApp } from "../../store/app";
+import { s } from "../../strings";
 import styles from "../shell/sheets.module.css";
 
 const close = () => openSheet(null);
@@ -41,9 +42,9 @@ export function OptionsSheet() {
 
   return (
     <div className={styles.alert}>
-      <h2 className={styles.title}>Options for this download</h2>
+      <h2 className={styles.title}>{s.optionsTitle}</h2>
       <div className={styles.form}>
-        <span className={styles.formLabel}>Save to:</span>
+        <span className={styles.formLabel}>{s.saveToRow}</span>
         <span className={styles.formValue}>
           <span className={styles.path}>{request.destination ?? defaultDir}</span>
           <Button
@@ -55,33 +56,35 @@ export function OptionsSheet() {
               })
             }
           >
-            Change…
+            {s.changeDestination}
           </Button>
           {request.destination && (
             <Button variant="plain" onClick={() => setRequest({ ...request, destination: null })}>
-              Use default
+              {s.useDefault}
             </Button>
           )}
         </span>
 
         {!audio && (
           <>
-            <span className={styles.formLabel}>Subtitles:</span>
+            <span className={styles.formLabel}>{s.subtitlesRow}</span>
             <span className={styles.formStack}>
               <Checkbox
                 label={
                   info?.subtitles.length
-                    ? `Download subtitles (${info.subtitles.slice(0, 6).join(", ")}${info.subtitles.length > 6 ? "…" : ""})`
-                    : "Download subtitles"
+                    ? s.downloadSubtitlesWith(
+                        `${info.subtitles.slice(0, 6).join(", ")}${info.subtitles.length > 6 ? "…" : ""}`,
+                      )
+                    : s.downloadSubtitles
                 }
                 checked={o.subtitles}
                 onChange={(subtitles) => set({ subtitles })}
               />
               {o.subtitles && (
                 <span className={styles.formRow}>
-                  <span className={styles.muted}>Languages</span>
+                  <span className={styles.muted}>{s.languages}</span>
                   <TextField
-                    aria-label="Subtitle languages"
+                    aria-label={s.subtitleLanguages}
                     defaultValue={o.subLangs.join(", ")}
                     onBlur={(e) => set({ subLangs: e.target.value.split(/[,\s]+/).filter(Boolean) })}
                   />
@@ -89,7 +92,7 @@ export function OptionsSheet() {
               )}
               {o.subtitles && info?.autoCaptions && (
                 <Checkbox
-                  label="Include auto-generated captions"
+                  label={s.autoCaptions}
                   checked={o.autoSubs}
                   onChange={(autoSubs) => set({ autoSubs })}
                 />
@@ -98,56 +101,56 @@ export function OptionsSheet() {
           </>
         )}
 
-        <span className={styles.formLabel}>Only part of it:</span>
+        <span className={styles.formLabel}>{s.partRow}</span>
         <span className={styles.formStack}>
           <span className={styles.formRow}>
             <TextField
-              aria-label="Start time"
-              placeholder="Start, e.g. 1:30"
+              aria-label={s.startTime}
+              placeholder={s.startPlaceholder}
               value={section.start}
               onChange={(e) => set({ section: { ...section, start: e.target.value } })}
             />
-            <span className={styles.muted}>to</span>
+            <span className={styles.muted}>{s.timeTo}</span>
             <TextField
-              aria-label="End time"
-              placeholder="End, e.g. 2:45"
+              aria-label={s.endTime}
+              placeholder={s.endPlaceholder}
               value={section.end}
               onChange={(e) => set({ section: { ...section, end: e.target.value } })}
             />
           </span>
-          {!timesOk && <span className={styles.error}>Use seconds or minutes:seconds, like 90 or 1:30.</span>}
+          {!timesOk && <span className={styles.error}>{s.timeFormatError}</span>}
           <Checkbox
-            label="Cut exactly at these times (slower, re-encodes the edges)"
+            label={s.preciseCuts}
             checked={o.preciseCuts}
             onChange={(preciseCuts) => set({ preciseCuts })}
           />
         </span>
 
-        <span className={styles.formLabel}>Sponsor segments:</span>
+        <span className={styles.formLabel}>{s.sponsorSegmentsRow}</span>
         <span className={styles.formValue}>
           <PopUpButton<SponsorBlock>
-            label="Sponsor segments"
+            label={s.sponsorSegmentsLabel}
             value={o.sponsorblock}
             onChange={(sponsorblock) => set({ sponsorblock })}
             choices={[
-              { value: "off", label: "Keep as they are" },
-              { value: "mark", label: "Mark as chapters" },
-              { value: "remove", label: "Cut out" },
+              { value: "off", label: s.sponsorKeep },
+              { value: "mark", label: s.sponsorMark },
+              { value: "remove", label: s.sponsorRemove },
             ]}
           />
         </span>
 
         {live && (
           <>
-            <span className={styles.formLabel}>Live stream:</span>
+            <span className={styles.formLabel}>{s.liveRow}</span>
             <span className={styles.formStack}>
               <Checkbox
-                label="Record from the start of the stream"
+                label={s.liveFromStart}
                 checked={o.liveFromStart}
                 onChange={(liveFromStart) => set({ liveFromStart })}
               />
               <Checkbox
-                label="If it has not started, wait for it"
+                label={s.waitForLive}
                 checked={o.waitForLive}
                 onChange={(waitForLive) => set({ waitForLive })}
               />
@@ -156,9 +159,9 @@ export function OptionsSheet() {
         )}
       </div>
       <div className={styles.buttons}>
-        <Button onClick={close}>Cancel</Button>
+        <Button onClick={close}>{s.cancelButton}</Button>
         <Button variant="primary" disabled={!timesOk} onClick={apply}>
-          Use these options
+          {s.useOptions}
         </Button>
       </div>
     </div>

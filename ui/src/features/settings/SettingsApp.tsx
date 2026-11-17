@@ -15,17 +15,18 @@ import type { OnAdd, ReleaseChannel, Settings, SponsorBlock, Tool } from "../../
 import { commands } from "../../ipc";
 import { snappy } from "../../motion/tokens";
 import { saveSettings, useApp, useConnection } from "../../store/app";
+import { s, sponsorCategoryLabel } from "../../strings";
 import { PresetControls } from "../downloads/PreviewCard";
 import styles from "./settings.module.css";
 
 type Tab = "general" | "formats" | "network" | "components" | "advanced";
 
 const tabs: { id: Tab; label: string; icon: LucideIcon }[] = [
-  { id: "general", label: "General", icon: SlidersHorizontal },
-  { id: "formats", label: "Formats", icon: Film },
-  { id: "network", label: "Network & Accounts", icon: Globe },
-  { id: "components", label: "Components", icon: Package },
-  { id: "advanced", label: "Advanced", icon: Download },
+  { id: "general", label: s.tabGeneral, icon: SlidersHorizontal },
+  { id: "formats", label: s.tabFormats, icon: Film },
+  { id: "network", label: s.tabNetwork, icon: Globe },
+  { id: "components", label: s.tabComponents, icon: Package },
+  { id: "advanced", label: s.tabAdvanced, icon: Download },
 ];
 
 const change = (patch: Partial<Settings>) => void saveSettings((st) => ({ ...st, ...patch }));
@@ -93,7 +94,7 @@ const counts = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({ value: n, label: String(n)
 function General({ st }: { st: Settings }) {
   return (
     <>
-      <Row label="Save downloads to:">
+      <Row label={s.saveDownloadsTo}>
         <span className={styles.path}>{st.downloadDir}</span>
         <Button
           onClick={() =>
@@ -104,84 +105,65 @@ function General({ st }: { st: Settings }) {
             })
           }
         >
-          Change…
+          {s.changeDestination}
         </Button>
       </Row>
-      <Row label="When a link is added:">
+      <Row label={s.onAddRow}>
         <PopUpButton<OnAdd>
-          label="When a link is added"
+          label={s.onAddLabel}
           value={st.onAdd}
           onChange={(onAdd) => change({ onAdd })}
           choices={[
-            { value: "preview", label: "Show the preview" },
-            { value: "download", label: "Download straight away" },
+            { value: "preview", label: s.onAddPreview },
+            { value: "download", label: s.onAddDownload },
           ]}
         />
       </Row>
-      <Row label="Downloads at once:" note="How many run at the same time, and from one site.">
+      <Row label={s.concurrentRow} note={s.concurrentNote}>
         <PopUpButton
-          label="Downloads at once"
+          label={s.concurrentLabel}
           value={st.maxConcurrent}
           choices={counts}
           onChange={(maxConcurrent) => change({ maxConcurrent })}
         />
-        <span className={styles.inline}>per site</span>
+        <span className={styles.inline}>{s.perSite}</span>
         <PopUpButton
-          label="Downloads per site"
+          label={s.perSiteLabel}
           value={st.maxPerSite}
           choices={counts}
           onChange={(maxPerSite) => change({ maxPerSite })}
         />
       </Row>
       <div className={styles.separator} />
-      <Row label="Notifications:">
+      <Row label={s.notificationsRow}>
         <Switch
-          label="Tell me when downloads finish or fail"
+          label={s.notificationsSwitch}
           checked={st.notifications}
           onChange={(notifications) => change({ notifications })}
         />
       </Row>
-      <Row
-        label="Clipboard:"
-        note="When you switch to lovelyDL, it checks whether you copied a link and offers to add it. It never reads the clipboard in the background."
-      >
+      <Row label={s.clipboardRow} note={s.clipboardNote}>
         <Switch
-          label="Notice copied links"
+          label={s.clipboardSwitch}
           checked={st.noticeCopiedLinks}
           onChange={(noticeCopiedLinks) => change({ noticeCopiedLinks })}
         />
       </Row>
-      <Row label="While downloading:">
+      <Row label={s.keepAwakeRow}>
         <Switch
-          label="Keep the computer awake"
+          label={s.keepAwakeSwitch}
           checked={st.keepAwake}
           onChange={(keepAwake) => change({ keepAwake })}
         />
       </Row>
-      <Row
-        label="System tray:"
-        note="Shows a small queue in the notification area. Closing the window then keeps lovelyDL running."
-      >
-        <Switch
-          label="Show lovelyDL in the system tray"
-          checked={st.trayIcon}
-          onChange={(trayIcon) => change({ trayIcon })}
-        />
+      <Row label={s.trayRow} note={s.trayNote}>
+        <Switch label={s.traySwitch} checked={st.trayIcon} onChange={(trayIcon) => change({ trayIcon })} />
       </Row>
     </>
   );
 }
 
-const sponsorCategories: [string, string][] = [
-  ["sponsor", "Sponsors"],
-  ["selfpromo", "Self-promotion"],
-  ["interaction", "Subscribe reminders"],
-  ["intro", "Intros"],
-  ["outro", "Endcards"],
-  ["preview", "Previews and recaps"],
-  ["music_offtopic", "Non-music in music videos"],
-  ["filler", "Filler"],
-];
+const sponsorCategories = Object.entries(sponsorCategoryLabel);
 
 function Formats({ st }: { st: Settings }) {
   const req = st.defaultRequest;
@@ -194,71 +176,71 @@ function Formats({ st }: { st: Settings }) {
   }, [st.filenameTemplate]);
   return (
     <>
-      <Row label="Default format:">
+      <Row label={s.defaultFormatRow}>
         <PresetControls request={req} onChange={(defaultRequest) => change({ defaultRequest })} />
       </Row>
-      <Row label="Embed:">
+      <Row label={s.embedRow}>
         <div className={styles.stack}>
           <Checkbox
-            label="Thumbnail as cover art"
+            label={s.embedThumbnail}
             checked={o.embedThumbnail}
             onChange={(embedThumbnail) => setOptions({ embedThumbnail })}
           />
           <Checkbox
-            label="Title, artist and other metadata"
+            label={s.embedMetadata}
             checked={o.embedMetadata}
             onChange={(embedMetadata) => setOptions({ embedMetadata })}
           />
           <Checkbox
-            label="Chapters"
+            label={s.embedChapters}
             checked={o.embedChapters}
             onChange={(embedChapters) => setOptions({ embedChapters })}
           />
         </div>
       </Row>
-      <Row label="Subtitles:">
+      <Row label={s.subtitlesRow}>
         <div className={styles.stack}>
           <Checkbox
-            label="Download subtitles"
+            label={s.downloadSubtitles}
             checked={o.subtitles}
             onChange={(subtitles) => setOptions({ subtitles })}
           />
           <span className={styles.inlineRow}>
-            <span className={styles.inline}>Languages</span>
+            <span className={styles.inline}>{s.languages}</span>
             <Field
               key={o.subLangs.join(", ")}
-              label="Subtitle languages"
+              label={s.subtitleLanguages}
               value={o.subLangs.join(", ")}
-              placeholder="en, fr"
+              placeholder={s.subLangsPlaceholder}
               onSave={(v) => setOptions({ subLangs: v.split(/[,\s]+/).filter(Boolean) })}
             />
           </span>
           <Checkbox
-            label="Include auto-generated captions"
+            label={s.autoCaptions}
             checked={o.autoSubs}
             onChange={(autoSubs) => setOptions({ autoSubs })}
           />
           <PopUpButton
-            label="Subtitle files"
+            label={s.subtitleFilesLabel}
             value={o.embedSubs}
             onChange={(embedSubs) => setOptions({ embedSubs })}
             choices={[
-              { value: true, label: "Embed in the video" },
-              { value: false, label: "Save as separate files" },
+              { value: true, label: s.embedSubs },
+              { value: false, label: s.separateSubs },
             ]}
           />
         </div>
       </Row>
-      <Row label="SponsorBlock:" note="Segments come from the SponsorBlock community database.">
+      <Row label={s.sponsorBlockRow} note={s.sponsorBlockNote}>
         <div className={styles.stack}>
           <PopUpButton<SponsorBlock>
-            label="SponsorBlock"
+            label={s.sponsorBlockLabel}
             value={o.sponsorblock}
             onChange={(sponsorblock) => setOptions({ sponsorblock })}
             choices={[
-              { value: "off", label: "Off" },
-              { value: "mark", label: "Mark as chapters" },
-              { value: "remove", label: "Cut out" },
+              { value: "off", label: s.sponsorOff },
+              { value: "mark", label: s.sponsorMark },
+              { value: "remove", label: s.sponsorRemove },
             ]}
           />
           {o.sponsorblock !== "off" && (
@@ -283,30 +265,30 @@ function Formats({ st }: { st: Settings }) {
       </Row>
       <div className={styles.separator} />
       <Row
-        label="File names:"
+        label={s.fileNamesRow}
         note={
           <>
-            Example: <span className={`${styles.mono} selectable`}>{preview}</span>
+            {s.fileNameExample} <span className={`${styles.mono} selectable`}>{preview}</span>
           </>
         }
       >
         <Field
           key={st.filenameTemplate}
-          label="File name template"
+          label={s.fileNameTemplate}
           wide
           value={st.filenameTemplate}
           onSave={(filenameTemplate) => change({ filenameTemplate })}
         />
       </Row>
-      <Row label="Playlists:">
+      <Row label={s.playlistsRow}>
         <div className={styles.stack}>
           <Checkbox
-            label="Number the files in playlist order"
+            label={s.playlistIndex}
             checked={st.playlistIndex}
             onChange={(playlistIndex) => change({ playlistIndex })}
           />
           <Checkbox
-            label="Skip items already downloaded"
+            label={s.skipDownloaded}
             checked={st.skipDownloaded}
             onChange={(skipDownloaded) => change({ skipDownloaded })}
           />
@@ -317,7 +299,7 @@ function Formats({ st }: { st: Settings }) {
 }
 
 const browsers = ["", "firefox", "chrome", "edge", "brave", "opera", "vivaldi", "chromium", "whale"];
-const browserName = (b: string) => (b ? (b[0]?.toUpperCase() ?? "") + b.slice(1) : "Don't use cookies");
+const browserName = (b: string) => (b ? (b[0]?.toUpperCase() ?? "") + b.slice(1) : s.noCookies);
 const bookmarklet = "javascript:location.href='lovelydl://download?url='+encodeURIComponent(location.href)";
 
 function Network({ st }: { st: Settings }) {
@@ -326,68 +308,62 @@ function Network({ st }: { st: Settings }) {
   );
   return (
     <>
-      <Row label="Speed limit:" note="For example 2M for 2 MB/s, or 500K. Empty means no limit.">
+      <Row label={s.speedLimitRow} note={s.speedLimitNote}>
         <Field
           key={st.rateLimit}
-          label="Speed limit"
+          label={s.speedLimitLabel}
           value={st.rateLimit}
-          placeholder="No limit"
+          placeholder={s.noLimit}
           onSave={(rateLimit) => change({ rateLimit })}
         />
       </Row>
-      <Row label="Proxy:" note="http://, https:// or socks5:// with a host and port.">
+      <Row label={s.proxyRow} note={s.proxyNote}>
         <Field
           key={st.proxy}
-          label="Proxy"
+          label={s.proxyLabel}
           wide
           value={st.proxy}
-          placeholder="None"
+          placeholder={s.proxyNone}
           onSave={(proxy) => change({ proxy })}
         />
       </Row>
-      <Row
-        label="Big playlists:"
-        note="Waits a few seconds between requests, so sites are less likely to block a long run."
-      >
+      <Row label={s.bigPlaylistsRow} note={s.paceNote}>
         <Switch
-          label="Pace requests"
+          label={s.paceSwitch}
           checked={st.paceRequests}
           onChange={(paceRequests) => change({ paceRequests })}
         />
       </Row>
       <div className={styles.separator} />
       <Row
-        label="Signed-in content:"
+        label={s.cookiesRow}
         note={
           st.cookiesBrowser === "firefox"
-            ? "yt-dlp reads Firefox's cookies at download time. lovelyDL never copies or stores them."
+            ? s.cookiesNoteFirefox
             : chromium
-              ? `Close ${browserName(st.cookiesBrowser)} before downloading: Windows locks its cookies while it runs. lovelyDL never copies or stores them.`
-              : "Use a browser where you are signed in, for videos that need an account. Cookies are read at download time and never stored."
+              ? s.cookiesNoteChromium(browserName(st.cookiesBrowser))
+              : s.cookiesNoteNone
         }
       >
         <PopUpButton
-          label="Use cookies from"
+          label={s.cookiesLabel}
           value={st.cookiesBrowser}
           onChange={(cookiesBrowser) => change({ cookiesBrowser })}
           choices={browsers.map((b) => ({
             value: b,
-            label: b ? `Use cookies from ${browserName(b)}` : browserName(b),
+            label: b ? s.cookiesFrom(browserName(b)) : browserName(b),
           }))}
         />
       </Row>
-      <Row
-        label="Bookmarklet:"
-        note="Make a bookmark with this as its address. Clicking it on a video page opens the page in lovelyDL."
-      >
+      <Row label={s.bookmarkletRow} note={s.bookmarkletNote}>
         <span className={`${styles.mono} ${styles.path} selectable`}>{bookmarklet}</span>
-        <Button onClick={() => void commands.copyText(bookmarklet)}>Copy</Button>
+        <Button onClick={() => void commands.copyText(bookmarklet)}>{s.copy}</Button>
       </Row>
     </>
   );
 }
 
-const toolInfo: Record<Tool["id"], string> = { ytdlp: "yt-dlp", ffmpeg: "ffmpeg and ffprobe", deno: "Deno" };
+const toolInfo: Record<Tool["id"], string> = { ytdlp: "yt-dlp", ffmpeg: s.ffmpegAndFfprobe, deno: "Deno" };
 
 function ToolRow({ tool }: { tool: Tool }) {
   const [error, setError] = useState<string | null>(null);
@@ -403,24 +379,24 @@ function ToolRow({ tool }: { tool: Tool }) {
         <span className={styles.toolName}>{toolInfo[tool.id]}</span>
         <span className={styles.note}>
           {status.status === "ready" &&
-            `${tool.version} · ${tool.origin === "managed" ? "kept up to date by lovelyDL" : tool.origin === "system" ? "installed on this PC" : "your own copy"}`}
-          {status.status === "missing" && "Not installed"}
-          {status.status === "checking" && "Checking…"}
-          {status.status === "broken" && `Doesn't run: ${status.message}`}
-          {tool.latest && status.status === "ready" && ` · ${tool.latest} available`}
+            `${tool.version} · ${tool.origin === "managed" ? s.originManaged : tool.origin === "system" ? s.originSystem : s.originCustom}`}
+          {status.status === "missing" && s.notInstalled}
+          {status.status === "checking" && s.checking}
+          {status.status === "broken" && s.toolBrokenDetail(status.message)}
+          {tool.latest && status.status === "ready" && ` · ${s.versionAvailable(tool.latest)}`}
         </span>
         {error && <span className={styles.error}>{error}</span>}
         {status.status === "installing" && (
-          <ProgressBar value={status.fraction} label={`Installing ${toolInfo[tool.id]}`} />
+          <ProgressBar value={status.fraction} label={s.installingTool(toolInfo[tool.id])} />
         )}
       </div>
       {status.status !== "installing" && (tool.origin === "managed" || status.status !== "ready") && (
         <>
           {status.status === "ready" && (
-            <Button onClick={() => void run(commands.componentRollback(tool.id))}>Previous version</Button>
+            <Button onClick={() => void run(commands.componentRollback(tool.id))}>{s.previousVersion}</Button>
           )}
           <Button onClick={() => void run(commands.componentInstall(tool.id))}>
-            {status.status === "ready" ? "Update" : "Install"}
+            {status.status === "ready" ? s.update : s.install}
           </Button>
         </>
       )}
@@ -429,40 +405,40 @@ function ToolRow({ tool }: { tool: Tool }) {
 }
 
 function Components({ st }: { st: Settings }) {
-  const components = useApp((s) => s.components);
+  const components = useApp((state) => state.components);
   return (
     <>
       <div className={styles.tools}>
         {components &&
           [components.ytdlp, components.ffmpeg, components.deno].map((t) => <ToolRow key={t.id} tool={t} />)}
       </div>
-      <Row label="yt-dlp builds:" note="Nightly builds fix broken sites sooner, and are tested less.">
+      <Row label={s.ytdlpBuildsRow} note={s.ytdlpBuildsNote}>
         <PopUpButton<ReleaseChannel>
-          label="yt-dlp builds"
+          label={s.ytdlpBuildsLabel}
           value={st.ytdlpChannel}
           onChange={(ytdlpChannel) => change({ ytdlpChannel })}
           choices={[
-            { value: "stable", label: "Stable" },
-            { value: "nightly", label: "Nightly" },
+            { value: "stable", label: s.channelStable },
+            { value: "nightly", label: s.channelNightly },
           ]}
         />
       </Row>
-      <Row label="Updates:" note="Checked at most once a day, and never while something is downloading.">
+      <Row label={s.updatesRow} note={s.updatesNote}>
         <Switch
-          label="Update the tools automatically"
+          label={s.autoUpdateTools}
           checked={st.autoUpdateTools}
           onChange={(autoUpdateTools) => change({ autoUpdateTools })}
         />
       </Row>
-      <Row label="Installed tools:">
+      <Row label={s.installedToolsRow}>
         <Switch
-          label="Prefer tools already installed on this PC"
+          label={s.preferSystemTools}
           checked={st.useSystemTools}
           onChange={(useSystemTools) => change({ useSystemTools })}
         />
       </Row>
       <Row label="">
-        <Button onClick={() => void commands.componentsRefresh()}>Check again</Button>
+        <Button onClick={() => void commands.componentsRefresh()}>{s.checkAgain}</Button>
       </Row>
     </>
   );
@@ -471,61 +447,55 @@ function Components({ st }: { st: Settings }) {
 function Advanced({ st }: { st: Settings }) {
   return (
     <>
-      <Row label="yt-dlp:" note="A yt-dlp.exe to use instead of lovelyDL's own.">
+      <Row label={s.ytdlpRow} note={s.customYtdlpNote}>
         <Field
           key={st.customYtdlp}
-          label="Custom yt-dlp"
+          label={s.customYtdlpLabel}
           wide
           value={st.customYtdlp}
-          placeholder="Managed by lovelyDL"
+          placeholder={s.managedByApp}
           onSave={(customYtdlp) => change({ customYtdlp })}
         />
       </Row>
-      <Row label="ffmpeg folder:">
+      <Row label={s.ffmpegFolderRow}>
         <Field
           key={st.customFfmpegDir}
-          label="Custom ffmpeg folder"
+          label={s.customFfmpegLabel}
           wide
           value={st.customFfmpegDir}
-          placeholder="Managed by lovelyDL"
+          placeholder={s.managedByApp}
           onSave={(customFfmpegDir) => change({ customFfmpegDir })}
         />
       </Row>
-      <Row
-        label="JavaScript runtime:"
-        note="name:path, for example node:C:\Program Files\nodejs\node.exe. Deno, Node 22+, QuickJS and Bun work."
-      >
+      <Row label={s.jsRuntimeRow} note={s.jsRuntimeNote}>
         <Field
           key={st.customJsRuntime}
-          label="Custom JavaScript runtime"
+          label={s.customJsLabel}
           wide
           value={st.customJsRuntime}
-          placeholder="Deno, managed by lovelyDL"
+          placeholder={s.jsRuntimePlaceholder}
           onSave={(customJsRuntime) => change({ customJsRuntime })}
         />
       </Row>
-      <Row label="Fragments at once:" note="Speeds up streams that arrive in pieces. Some sites limit this.">
+      <Row label={s.fragmentsRow} note={s.fragmentsNote}>
         <PopUpButton
-          label="Fragments at once"
+          label={s.fragmentsLabel}
           value={st.concurrentFragments}
           choices={[1, 2, 4, 8, 16].map((n) => ({ value: n, label: String(n) }))}
           onChange={(concurrentFragments) => change({ concurrentFragments })}
         />
       </Row>
       <div className={styles.separator} />
-      <Row
-        label="Extra yt-dlp options:"
-        note="One option per line. For people who know yt-dlp; links and imported settings can never set these."
-      >
+      <Row label={s.extraArgsRow} note={s.extraArgsNote}>
         <div className={styles.stack}>
           <Switch
-            label="Pass extra options to yt-dlp"
+            label={s.extraArgsSwitch}
             checked={st.customArgsEnabled}
             onChange={(customArgsEnabled) => change({ customArgsEnabled })}
           />
           <textarea
             className={styles.textarea}
-            aria-label="Extra yt-dlp options"
+            aria-label={s.extraArgsLabel}
             disabled={!st.customArgsEnabled}
             defaultValue={st.customArgs.join("\n")}
             spellCheck={false}
@@ -541,9 +511,9 @@ function Advanced({ st }: { st: Settings }) {
         </div>
       </Row>
       <div className={styles.separator} />
-      <Row label="lovelyDL updates:">
+      <Row label={s.appUpdatesRow}>
         <Switch
-          label="Check for updates automatically"
+          label={s.autoUpdateApp}
           checked={st.autoUpdateApp}
           onChange={(autoUpdateApp) => change({ autoUpdateApp })}
         />
@@ -554,7 +524,7 @@ function Advanced({ st }: { st: Settings }) {
 
 export function App() {
   const [tab, setTab] = useState<Tab>("general");
-  const st = useApp((s) => s.settings);
+  const st = useApp((state) => state.settings);
   useConnection();
   return (
     <div className={styles.window}>

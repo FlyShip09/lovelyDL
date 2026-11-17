@@ -15,9 +15,9 @@ import { s } from "../../strings";
 import styles from "./onboarding.module.css";
 
 const toolNames: Record<Tool["id"], [string, string]> = {
-  ytdlp: ["yt-dlp", "Reads the site and downloads the media"],
-  ffmpeg: ["ffmpeg", "Joins video and audio, converts formats"],
-  deno: ["Deno", "Lets yt-dlp read YouTube"],
+  ytdlp: ["yt-dlp", s.toolPurposeYtdlp],
+  ffmpeg: ["ffmpeg", s.toolPurposeFfmpeg],
+  deno: ["Deno", s.toolPurposeDeno],
 };
 
 function ToolRow({ tool }: { tool: Tool }) {
@@ -32,14 +32,14 @@ function ToolRow({ tool }: { tool: Tool }) {
       <div className={styles.toolState}>
         {status.status === "ready" && (
           <span className={styles.ready}>
-            {tool.origin === "system" ? `Found, ${tool.version}` : tool.version}
+            {tool.origin === "system" ? s.toolFound(tool.version) : tool.version}
           </span>
         )}
-        {status.status === "missing" && <span className={styles.muted}>Not installed</span>}
-        {status.status === "checking" && <span className={styles.muted}>Checking…</span>}
-        {status.status === "broken" && <span className={styles.broken}>Doesn't run</span>}
+        {status.status === "missing" && <span className={styles.muted}>{s.notInstalled}</span>}
+        {status.status === "checking" && <span className={styles.muted}>{s.checking}</span>}
+        {status.status === "broken" && <span className={styles.broken}>{s.toolBroken}</span>}
         {status.status === "installing" && (
-          <ProgressBar value={status.fraction} label={`Installing ${name}`} />
+          <ProgressBar value={status.fraction} label={s.installingTool(name)} />
         )}
       </div>
     </div>
@@ -71,7 +71,7 @@ export function Onboarding() {
       await saveSettings((st) => ({ ...st, downloadDir: folder }));
       setError(null);
     } catch (e) {
-      setError(`lovelyDL can't save to that folder: ${String(e)}`);
+      setError(s.cantSaveFolder(String(e)));
     }
   };
 
@@ -94,20 +94,18 @@ export function Onboarding() {
   const steps = [
     <div key="welcome" className={styles.step}>
       <img src="/icon.svg" alt="" className={styles.icon} />
-      <h1 className={styles.title}>Welcome to lovelyDL</h1>
-      <p className={styles.lead}>
-        Paste a link, get the file. Video and audio from the sites yt-dlp supports, saved to your PC.
-      </p>
+      <h1 className={styles.title}>{s.welcomeTitle}</h1>
+      <p className={styles.lead}>{s.welcomeLead}</p>
       <p className={styles.legal}>{s.legal}</p>
       <div className={styles.buttons}>
         <Button variant="primary" large data-autofocus onClick={() => go(1)}>
-          Continue
+          {s.continueButton}
         </Button>
       </div>
     </div>,
     <div key="folder" className={styles.step}>
-      <h1 className={styles.title}>Where should downloads go?</h1>
-      <p className={styles.lead}>You can change this later, or for a single download.</p>
+      <h1 className={styles.title}>{s.folderTitle}</h1>
+      <p className={styles.lead}>{s.folderLead}</p>
       <div className={styles.folder}>
         <span className={`${styles.path} selectable`}>{settings?.downloadDir}</span>
         <Button onClick={() => void chooseFolder()}>{s.changeDestination}</Button>
@@ -115,7 +113,7 @@ export function Onboarding() {
       {error && <p className={styles.error}>{error}</p>}
       <div className={styles.buttons}>
         <Button large onClick={() => go(0)}>
-          Back
+          {s.back}
         </Button>
         <Button
           variant="primary"
@@ -123,20 +121,17 @@ export function Onboarding() {
           onClick={() =>
             void commands.checkFolder(settings?.downloadDir ?? "").then(
               () => go(2),
-              (e: unknown) => setError(`lovelyDL can't save to that folder: ${String(e)}`),
+              (e: unknown) => setError(s.cantSaveFolder(String(e))),
             )
           }
         >
-          Continue
+          {s.continueButton}
         </Button>
       </div>
     </div>,
     <div key="tools" className={styles.step}>
-      <h1 className={styles.title}>Get the tools</h1>
-      <p className={styles.lead}>
-        lovelyDL uses three free tools. It downloads them from their official releases, checks each file, and
-        keeps them up to date.
-      </p>
+      <h1 className={styles.title}>{s.toolsTitle}</h1>
+      <p className={styles.lead}>{s.toolsLead}</p>
       <div className={styles.tools}>
         {tools.map((tool) => (
           <ToolRow key={tool.id} tool={tool} />
@@ -145,15 +140,15 @@ export function Onboarding() {
       <label className={styles.option}>
         <Toggle
           checked={settings?.useSystemTools ?? false}
-          label="Use tools already installed on this PC"
+          label={s.useSystemTools}
           onChange={(on) => void saveSettings((st) => ({ ...st, useSystemTools: on }))}
         />
-        <span>Use tools already installed on this PC</span>
+        <span>{s.useSystemTools}</span>
       </label>
       {error && <p className={styles.error}>{error}</p>}
       <div className={styles.buttons}>
         <Button large onClick={() => go(1)}>
-          Back
+          {s.back}
         </Button>
         {allReady ? (
           <Button variant="primary" large onClick={() => go(3)}>
@@ -161,19 +156,17 @@ export function Onboarding() {
           </Button>
         ) : (
           <Button variant="primary" large disabled={busy} onClick={() => void install()}>
-            {busy ? "Installing…" : "Install"}
+            {busy ? s.installing : s.install}
           </Button>
         )}
       </div>
     </div>,
     <div key="done" className={styles.step}>
-      <h1 className={styles.title}>You're set</h1>
-      <p className={styles.lead}>
-        Copy a link in your browser, come back, and press Ctrl+V. Or drag the link onto the window.
-      </p>
+      <h1 className={styles.title}>{s.doneTitle}</h1>
+      <p className={styles.lead}>{s.doneLead}</p>
       <div className={styles.buttons}>
         <Button variant="primary" large data-autofocus onClick={() => void finish()}>
-          Start using lovelyDL
+          {s.startUsing}
         </Button>
       </div>
     </div>,

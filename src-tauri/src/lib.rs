@@ -79,6 +79,7 @@ fn specta() -> tauri_specta::Builder<Wry> {
             history_trash,
             download_again,
             reveal,
+            drag_out,
             open_file,
             open_folder,
             copy_link,
@@ -356,7 +357,6 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init())
-        .plugin(tauri_plugin_drag::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .register_asynchronous_uri_scheme_protocol("thumb", thumbnails)
         .invoke_handler(invoke)

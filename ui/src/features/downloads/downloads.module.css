@@ -5,6 +5,12 @@
   padding: var(--s2) 0 var(--s6);
 }
 
+.reorderItem {
+  position: relative;
+  border-radius: var(--r-field);
+  background: var(--bg-content);
+}
+
 /* Thumbnails */
 .thumb {
   position: relative;
@@ -247,6 +253,11 @@
   }
 }
 
+.controlSpace {
+  display: block;
+  height: var(--control-h);
+}
+
 .cardTop {
   display: flex;
   gap: var(--s4);
@@ -344,4 +355,16 @@
   align-items: center;
   gap: var(--s3);
   color: var(--label-2);
+}
+
+@media (forced-colors: active) {
+  .card,
+  .linkError {
+    outline: 1px solid CanvasText;
+  }
+
+  .failedStatus {
+    color: CanvasText;
+    text-decoration: underline;
+  }
 }

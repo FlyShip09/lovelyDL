@@ -87,3 +87,17 @@
 .iconButton:disabled {
   opacity: 0.4;
 }
+
+@media (forced-colors: active) {
+  .primary {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .primary:disabled {
+    background: Canvas;
+    color: GrayText;
+    outline-color: GrayText;
+  }
+}

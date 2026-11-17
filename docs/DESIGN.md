@@ -138,47 +138,57 @@ icon. If it reads as a gimmick in screenshots, it gets toned down, not dressed u
 ## Motion
 
 Springs for movement, short tweens for opacity and color. Only `transform`, `opacity` and
-`clip-path` animate; layout changes go through Motion's layout animations.
+`clip-path` animate; layout changes go through Motion's layout animations (`layout="position"`,
+never size, so text never stretches).
+
+Final values, tuned against contact sheets of recorded flows (`scripts/record-motion.mjs`,
+`docs/screenshots/motion/`):
 
 | Token | Value | Use |
 |---|---|---|
-| `snappy` | spring, bounce 0, 0.18 s | Selection indicators, toggles |
-| `smooth` | spring, bounce 0, 0.32 s | Layout shifts, rows moving, sidebar collapse |
-| `gentle` | spring, bounce 0, 0.42 s | Sheets, preview panel opening |
-| `fade` | 150 ms ease-out | Opacity and color |
+| `snappy` | spring, bounce 0, 0.18 s | Selection indicators, toggles, the sidebar count |
+| `smooth` | spring, bounce 0, 0.32 s | Rows moving, the list closing up, the sidebar sliding |
+| `gentle` | spring, bounce 0, 0.42 s | Sheets, the preview card |
+| `fade` | 150 ms ease-out | Opacity and color, status text crossfades |
 
-No spring overshoots: nothing here is thrown by a gesture except drag-reordering, which uses
-`smooth` with the drag's velocity.
+Nothing overshoots. The only gesture-driven motion, dragging a queued row, uses `smooth`.
 
-Choreography:
+Choreography as built:
 
-1. **Link added.** A thin activity line runs in the URL field while yt-dlp probes. The
-   preview panel grows out of the field; the thumbnail fades in once decoded.
-2. **Choosing a format.** The pop-up's check moves; the size estimate crossfades.
-3. **Starting (Enter).** The preview panel condenses into the first queue row (shared
-   element). The sidebar's Downloads count ticks up.
-4. **Progress.** Continuous bar plus the thumbnail reveal. Stage text crossfades.
-5. **Completion.** A checkmark draws in. After a beat the row moves to Completed, but never
-   while the pointer is over the list.
-6. **Failure.** The status turns red and an inline explanation with one fix button expands.
-7. **Remove or Clear.** Rows collapse with a small, capped stagger.
-8. **Reorder.** The row lifts with a shadow and springs into place.
-9. **Sheets and popovers.** Sheets slide down from under the toolbar; popovers scale and fade
-   from their anchor and leave the same way.
-10. **Sidebar.** The selection highlight slides between items; collapsing slides the sidebar.
-11. **Dragging a link over the window.** The content dims slightly and an inset accent
-    outline appears.
-12. **Clipboard banner.** Slides down from under the toolbar, and back up.
-13. **Onboarding.** Steps slide horizontally. Component installs show real progress.
-14. **Launch.** No splash, no staggered entrance; the first paint is the final layout.
+1. **Link added.** A 2 px line runs in the link field while yt-dlp reads it. If that takes
+   longer than 300 ms, the preview card appears already in its final shape (a blank thumbnail
+   tile and "Getting details…"), so nothing moves when the details arrive. The thumbnail
+   fades in once decoded.
+2. **Choosing a format.** The pop-up's check moves; the summary and size crossfade.
+3. **Return.** The card leaves the layout at once (it fades and drops 24 px) while the list
+   glides up into its place; the new row arrives at the top. The sidebar count pulses.
+4. **Progress.** The bar glides between updates and never moves back within a stage; speed
+   and time left change at most twice a second; the thumbnail fills with color.
+5. **Completion.** A check draws in where the row's buttons were. The row stays with the
+   active ones for 1.8 s, then joins Completed — but not while the pointer is over the list.
+6. **Failure.** The status turns red and the explanation with its fix expands below.
+7. **Remove, Clear.** Rows collapse in height and fade, with a stagger capped at six rows.
+8. **Reorder.** A queued row lifts with a shadow and the others make way; drop to keep.
+9. **Sheets** slide down from under the toolbar over a scrim and back up. **Menus** scale
+   from 97 % and fade from their anchor.
+10. **Sidebar.** The selection highlight slides; collapsing slides the sidebar out and the
+    content follows.
+11. **Dragging a link in** dims the content and draws an inset accent outline.
+12. **Clipboard and update banners** slide down from under the toolbar.
+13. **Onboarding** steps slide sideways; installs show real progress.
+14. **Launch.** No splash and no entrance animation: what is on screen at launch is simply
+    there (checked on the contact sheets).
 
-Reduce Motion (Windows "Animation effects" off): movement becomes a crossfade or an instant
-change; progress stays meaningful. Rows never move under the pointer or during a drag.
+Reduce Motion (Windows "Animation effects" off, `prefers-reduced-motion`): Motion's
+`reducedMotion="user"` turns movement into instant changes and keeps opacity, the thumbnail
+sweep is not shown, and progress keeps working.
 
 ## Accessibility
 
 - Reduce Motion: `prefers-reduced-motion`. Transparency off: `prefers-reduced-transparency`
-  makes the sidebar opaque. Contrast themes: `forced-colors` keeps system colors and borders.
+  makes the sidebar opaque. Contrast themes: under `forced-colors` every control gets an
+  outline the system colors, focus is a real outline, and selection, progress, toggles and
+  primary buttons use the system Highlight pair. The traffic lights keep their colors.
 - Every control and row has an accessible name; rows expose title, state and percent.
 - Finished and failed downloads are announced through a polite live region.
 - Full keyboard use: Tab between regions, arrows in lists, Enter, Space, Delete.
@@ -192,5 +202,5 @@ one next action. All strings live in `ui/src/strings.ts`.
 
 ## App icon
 
-Three concepts were sketched as SVG in `docs/icon/`; the choice and the reason are recorded
-there once the icon is built (M2).
+Three concepts are in `docs/icon/` with the reasons for the choice: a play triangle turned
+to point down, resting on a tray line, on a rose tile drawn to the macOS icon grid.

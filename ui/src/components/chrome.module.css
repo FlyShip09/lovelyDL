@@ -106,3 +106,15 @@
   box-shadow: var(--shadow-float);
   white-space: nowrap;
 }
+
+/* The traffic lights are pictures of buttons; their colors are the information. */
+@media (forced-colors: active) {
+  .lights {
+    forced-color-adjust: none;
+  }
+
+  .sheet,
+  .banner {
+    outline: 1px solid CanvasText;
+  }
+}

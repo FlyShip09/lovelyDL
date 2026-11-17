@@ -203,3 +203,37 @@ All run with yt-dlp 2026.10.26 on this PC.
   existed, so every change was applied twice and streamed playlist entries showed 32 of 17.
   `useConnection` now removes a listener that arrives after unmount, and appended entries
   skip ids already present.
+
+## 2026-11-17 · Drag-out is an app command, not the drag plugin
+
+- `tauri-plugin-drag` lets the page start a drag of any path it names. The app calls the
+  `drag` crate (same version, 2.1.1) from its own `drag_out` command instead, which takes a
+  job id and drags only that job's finished file. The page gets no drag permission.
+
+## 2026-11-17 · Contrast themes
+
+- Under `forced-colors` the system picks every color. Rules there give each control an
+  outline, make focus a real outline, and draw selection, progress, toggles and primary
+  buttons with the `Highlight` / `HighlightText` pair, which were invisible before. The
+  traffic lights keep their colors (`forced-color-adjust: none`), as they identify the
+  buttons.
+
+## 2026-11-17 · A queued row is its own drag item
+
+- Wrapping each row in Motion's `Reorder.Item` added an extra focusable element around the
+  row's grid semantics (axe flagged it). The row element itself is now the `Reorder.Item`,
+  with `layout="position"` so text never stretches while rows move.
+
+## 2026-11-17 · Motion fixes from the contact sheets
+
+- Removed the entrance fades at launch: the first frame is the real UI.
+- The probing preview card appears in its final shape, so nothing jumps when details arrive.
+- The preview card leaves the layout at once (`popLayout`) while the list glides up.
+
+## 2026-11-17 · Screen-reader names
+
+- A row's accessible name is "title, status", where status is the same short text the row
+  shows ("No connection", not yt-dlp's message). Icon buttons are named by their tooltip
+  (`title`). Chromium also reports a `title` as UI Automation help text, so Narrator can
+  repeat it at high verbosity; a custom tooltip would avoid that but is not worth its cost.
+
